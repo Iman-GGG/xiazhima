@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+dist
+.runtime
+*.log
+pnpm-debug.log
+.git
+.vscode

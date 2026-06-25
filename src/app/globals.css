@@ -1,0 +1,182 @@
+@import 'https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap';
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-signal-pass: var(--signal-pass);
+  --color-signal-risk: var(--signal-risk);
+  --color-signal-wait: var(--signal-wait);
+  --color-quote-up: var(--quote-up);
+  --color-quote-down: var(--quote-down);
+  --color-divider: var(--divider);
+  --font-sans:
+    'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+  --font-serif:
+    'Noto Serif SC', 'Songti SC', 'SimSun', ui-serif, Georgia, Cambria,
+    'Times New Roman', Times, serif;
+}
+
+:root {
+  --radius: 0.375rem;
+  /* 纸白底 + 墨黑字 */
+  --background: oklch(0.965 0.005 95);
+  --foreground: oklch(0.18 0 0);
+  --card: oklch(0.985 0.003 95);
+  --card-foreground: oklch(0.18 0 0);
+  --popover: oklch(0.985 0.003 95);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: oklch(0.18 0 0);
+  --primary-foreground: oklch(0.965 0.005 95);
+  --secondary: oklch(0.93 0.005 90);
+  --secondary-foreground: oklch(0.18 0 0);
+  --muted: oklch(0.93 0.005 90);
+  --muted-foreground: oklch(0.45 0.005 90);
+  --accent: oklch(0.93 0.005 90);
+  --accent-foreground: oklch(0.18 0 0);
+  --destructive: oklch(0.5 0.16 28);
+  --border: oklch(0.88 0.005 90);
+  --divider: oklch(0.88 0.005 90);
+  --input: oklch(0.88 0.005 90);
+  --ring: oklch(0.45 0.005 90);
+  --signal-pass: oklch(0.5 0.13 145);
+  --signal-risk: oklch(0.5 0.16 28);
+  --signal-wait: oklch(0.6 0.005 90);
+  --quote-up: oklch(0.5 0.18 28);
+  --quote-down: oklch(0.45 0.14 150);
+  --chart-1: oklch(0.18 0 0);
+  --chart-2: oklch(0.5 0.13 145);
+  --chart-3: oklch(0.5 0.16 28);
+  --chart-4: oklch(0.6 0.005 90);
+  --chart-5: oklch(0.45 0.005 90);
+  --sidebar: oklch(0.965 0.005 95);
+  --sidebar-foreground: oklch(0.18 0 0);
+  --sidebar-primary: oklch(0.18 0 0);
+  --sidebar-primary-foreground: oklch(0.965 0.005 95);
+  --sidebar-accent: oklch(0.93 0.005 90);
+  --sidebar-accent-foreground: oklch(0.18 0 0);
+  --sidebar-border: oklch(0.88 0.005 90);
+  --sidebar-ring: oklch(0.45 0.005 90);
+}
+
+.dark {
+  --background: oklch(0.13 0 0);
+  --foreground: oklch(0.92 0.005 95);
+  --card: oklch(0.18 0 0);
+  --card-foreground: oklch(0.92 0.005 95);
+  --popover: oklch(0.18 0 0);
+  --popover-foreground: oklch(0.92 0.005 95);
+  --primary: oklch(0.9 0.005 95);
+  --primary-foreground: oklch(0.18 0 0);
+  --secondary: oklch(0.24 0 0);
+  --secondary-foreground: oklch(0.92 0.005 95);
+  --muted: oklch(0.24 0 0);
+  --muted-foreground: oklch(0.65 0.005 90);
+  --accent: oklch(0.24 0 0);
+  --accent-foreground: oklch(0.92 0.005 95);
+  --destructive: oklch(0.6 0.18 28);
+  --border: oklch(1 0 0 / 12%);
+  --divider: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.55 0 0);
+  --signal-pass: oklch(0.62 0.13 145);
+  --signal-risk: oklch(0.62 0.16 28);
+  --signal-wait: oklch(0.6 0.005 90);
+  --quote-up: oklch(0.62 0.18 28);
+  --quote-down: oklch(0.6 0.14 150);
+  --chart-1: oklch(0.92 0.005 95);
+  --chart-2: oklch(0.62 0.13 145);
+  --chart-3: oklch(0.62 0.16 28);
+  --chart-4: oklch(0.6 0.005 90);
+  --chart-5: oklch(0.65 0.005 90);
+  --sidebar: oklch(0.18 0 0);
+  --sidebar-foreground: oklch(0.92 0.005 95);
+  --sidebar-primary: oklch(0.92 0.005 95);
+  --sidebar-primary-foreground: oklch(0.18 0 0);
+  --sidebar-accent: oklch(0.24 0 0);
+  --sidebar-accent-foreground: oklch(0.92 0.005 95);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.55 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "tnum" 1;
+  }
+}
+
+body {
+  @apply font-sans;
+}
+
+/* 数字使用等宽字体强化"刻度感" */
+.font-num {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* 信号灯 */
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.dot-pass { background: var(--signal-pass); }
+.dot-risk { background: var(--signal-risk); }
+.dot-wait { background: var(--signal-wait); }
+.dot-up { background: var(--quote-up); }
+.dot-down { background: var(--quote-down); }
+
+/* 仪表盘细分隔线 */
+.hairline {
+  border-top: 1px solid var(--divider);
+}

@@ -1,0 +1,24 @@
+name: Trigger precompute
+
+on:
+  schedule:
+    # Runs daily at 07:10 UTC (≈15:10 CST)
+    - cron: '10 7 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  call-precompute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger /api/precompute
+        env:
+          DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
+          PRECOMPUTE_SECRET: ${{ secrets.PRECOMPUTE_SECRET }}
+        run: |
+          if [ -z "$DEPLOY_URL" ]; then echo "DEPLOY_URL secret not set"; exit 1; fi
+          echo "Calling $DEPLOY_URL/api/precompute"
+          curl -X POST "$DEPLOY_URL/api/precompute" \
+            -H "Content-Type: application/json" \
+            -H "x-precompute-secret: $PRECOMPUTE_SECRET" \
+            -d '{}' \
+            --fail --silent -o /tmp/precompute.out || (echo "Request failed" && cat /tmp/precompute.out && exit 1)
