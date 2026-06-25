@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const OUT_DIR = path.resolve(__dirname, '..', 'out');
-const BASE = process.env.BASE_URL || 'http://localhost:3000';
+const BASE = process.env.BASE_URL || 'http://localhost:5000';
 
 async function ensureDir(p) {
   await fs.mkdir(p, { recursive: true });
