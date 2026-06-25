@@ -392,6 +392,12 @@ export const useStore = create<Store>((set) => ({
 
 - **静态快照**:
   - 我已生成静态快照并打包到 `out.zip`（位于项目根）。你也可以用 `scripts/export-snapshot.js` 在本地抓取页面到 `out/` 目录。
+  - 项目已新增 GitHub Pages 自动部署工作流：`.github/workflows/pages.yml`。它会在 `main` 分支 push 时自动：
+    1. 安装依赖
+    2. 构建项目
+    3. 启动本地服务
+    4. 抓取页面到 `out/`
+    5. 发布到 GitHub Pages
   - 本地预览静态文件示例：
     ```bash
     python -m http.server 8000 --directory out
