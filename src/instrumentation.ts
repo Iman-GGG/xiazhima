@@ -6,7 +6,8 @@
  * 文档：https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
  */
 export async function register() {
-  if (process.env.NEXT_RUNTIME === "nodejs") {
+  // Vercel serverless 环境不适合跑常驻调度器（会导致函数挂起超时）
+  if (process.env.NEXT_RUNTIME === "nodejs" && !process.env.VERCEL) {
     const { startScheduler } = await import("@/lib/stock/precompute");
     startScheduler();
   }
