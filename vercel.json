@@ -1,12 +1,16 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "package.json", "use": "@vercel/next" }
-  ],
   "functions": {
     "app/api/**": {
       "runtime": "nodejs",
       "maxDuration": 30
+    },
+    "app/api/screen/route.ts": {
+      "runtime": "nodejs",
+      "maxDuration": 60
+    },
+    "app/api/precompute/route.ts": {
+      "runtime": "nodejs",
+      "maxDuration": 300
     }
   }
 }
