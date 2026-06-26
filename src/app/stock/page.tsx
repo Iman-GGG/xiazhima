@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { StockSearch } from "@/components/feature/stock-search";
 import { SectionHeader } from "@/components/feature/section-header";
 import { LastStockRedirect } from "@/components/feature/last-stock-bridge";
@@ -15,7 +16,9 @@ export default function StockIndexPage() {
     .slice(0, 16);
   return (
     <div className="mx-auto max-w-6xl px-3 sm:px-5 py-6 sm:py-8 space-y-6">
-      <LastStockRedirect />
+      <Suspense fallback={null}>
+        <LastStockRedirect />
+      </Suspense>
       <section className="border border-divider bg-card">
         <div className="px-6 pt-6 pb-2">
           <h1 className="font-serif text-2xl">个股战法解析</h1>

@@ -74,7 +74,7 @@ export default async function StockDetailPage({ params }: PageProps) {
         <div className="border border-divider bg-card px-6 py-12 text-center">
           <div className="text-[color:var(--signal-risk)] font-medium">解析失败</div>
           <p className="text-sm text-muted-foreground mt-2">{error}</p>
-          <Link href="/stock" className="text-xs text-foreground underline mt-4 inline-block">
+          <Link href="/stock?from=nav" className="text-xs text-foreground underline mt-4 inline-block">
             返回个股解析首页
           </Link>
         </div>
@@ -155,7 +155,7 @@ function Breadcrumb({ code, name }: { code: string; name?: string }) {
         裁断台
       </Link>
       <ChevronRight size={12} />
-      <Link href="/stock" className="hover:text-foreground">
+      <Link href="/stock?from=nav" className="hover:text-foreground">
         个股解析
       </Link>
       <ChevronRight size={12} />
