@@ -1,15 +1,12 @@
 {
   "functions": {
     "app/api/**": {
-      "runtime": "nodejs",
       "maxDuration": 30
     },
     "app/api/screen/route.ts": {
-      "runtime": "nodejs",
       "maxDuration": 60
     },
     "app/api/precompute/route.ts": {
-      "runtime": "nodejs",
       "maxDuration": 300
     }
   }
