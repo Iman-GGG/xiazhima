@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/react';
 import { Inspector } from 'react-dev-inspector';
 import { SiteHeader } from '@/components/feature/site-header';
 import { SiteFooter } from '@/components/feature/site-footer';
@@ -52,6 +53,7 @@ export default function RootLayout({
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />
+        <Analytics />
       </body>
     </html>
   );
