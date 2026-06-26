@@ -29,7 +29,7 @@ export default function LearnPage() {
           <ul className="list-disc list-inside space-y-1 text-foreground">
             <li>顺大势、逆小势</li>
             <li>线上持股、线下空仓</li>
-            <li>只做 B1 回调低吸买点，其余位置不交易</li>
+            <li>B1 低吸 + B2 拐头放量加仓，S1 高位异动严格离场</li>
           </ul>
         </div>
       </section>
