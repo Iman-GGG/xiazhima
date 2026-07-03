@@ -70,8 +70,12 @@ export function MarketVerdictCard({ market }: { market: MarketJudgement }) {
           />
           <Metric
             label="活跃市值 OAMV"
-            value={`${oamvSign}${market.oamv.toFixed(2)}%`}
-            sub="警戒线≤-2.3%  新升浪≥4%"
+            value={
+              market.oamvTotal
+                ? `${formatYi(market.oamvTotal)}亿`
+                : `${oamvSign}${market.oamv.toFixed(2)}%`
+            }
+            sub={`${oamvSign}${market.oamv.toFixed(2)}%  |  警戒线≤-2.3%  新升浪≥4%`}
             valueTone={
               oamvUp
                 ? "text-[color:var(--quote-up)]"
@@ -92,6 +96,11 @@ export function MarketVerdictCard({ market }: { market: MarketJudgement }) {
       </div>
     </section>
   );
+}
+
+/** 格式化 OAMV 总值（单位：亿），如 258190 → "258,190" */
+function formatYi(n: number): string {
+  return Math.round(n).toLocaleString("zh-CN");
 }
 
 function Metric({

@@ -108,9 +108,12 @@ export interface MarketJudgement {
   bbi: number;
   bbiAbove: boolean;
   ma5Slope: number; // 短期 MA5 斜率（百分比）
-  oamv: number; // 活跃市值（指南针 OAMV）—— 百分比涨跌幅
-  oamvSource?: "admin" | "kline" | "index"; // admin=管理员录入；kline=K线VWAP公式计算；index=上证综指涨跌幅（近似）
+  oamv: number; // 活跃市值（OAMV）日涨跌幅（%）
+  oamvTotal?: number; // OAMV 总值（亿元），全A逐股聚合结果
+  oamvPrevTotal?: number; // 昨日 OAMV 总值（亿元）
+  oamvSource?: "admin" | "aggregate" | "index"; // admin=管理员录入；aggregate=全A逐股聚合；index=上证综指涨跌幅（近似）
   oamvUpdatedAt?: string; // 管理员录入时间
   oamvUpdatedBy?: string; // 管理员录入备注
+  oamvDate?: string; // OAMV 数据日期
   updatedAt: string;
 }

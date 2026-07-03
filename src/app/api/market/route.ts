@@ -59,7 +59,7 @@ export async function GET() {
     } else if (payload && typeof payload === "object") {
       const obj = payload as { market: Record<string, unknown>; lastBars: unknown };
       const m = obj.market;
-      // 仅对缺少 oamvSource 的旧缓存兜底（新逻辑已由 judgeMarket 设定 kline/index）
+      // 仅对缺少 oamvSource 的旧缓存兜底
       if (!m.oamvSource) {
         payload = {
           ...obj,
