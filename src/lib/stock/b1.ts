@@ -534,9 +534,10 @@ export function judgeMarket(meta: StockMeta, bars: KlineBar[]): MarketJudgement 
   const bbiAbove = !Number.isNaN(bbiVal) && last.close > bbiVal;
 
   // 活跃市值（OAMV）：指南针口径——市场流通市值加权后的整体涨跌幅（百分比）
-  // 上证综合指数本身即为「沪市全部上市股票按流通股本加权」的指数，
-  // 其当日涨跌幅可作为「活跃市值 OAMV」的可信近似。
-  const oamv = change;
+  // 优先使用 VWAP 变化率（真实 OAMV 公式：均价×流通盘 的日间涨跌）；
+  // 若 K 线缺少成交额字段（amount=0）则回落至上证综指涨跌幅作为近似。
+  const oamvVwap = computeOamvChange(bars);
+  const oamv = Number.isFinite(oamvVwap) ? oamvVwap : change;
 
   let trend: MarketJudgement["trend"] = "neutral";
   let label = "震荡";
@@ -571,6 +572,41 @@ export function judgeMarket(meta: StockMeta, bars: KlineBar[]): MarketJudgement 
     bbiAbove,
     ma5Slope: slope,
     oamv,
+    oamvSource: Number.isFinite(oamvVwap) ? "kline" : "index",
     updatedAt: last.date,
   };
+}
+
+/** 安全计算单根 K 线的 VWAP（成交量加权均价）。
+ *  VWAP = AMOUNT / VOL / 100，amount 或 volume 为 0 时返回 null。
+ */
+function safeVwap(bar: KlineBar): number | null {
+  if (!bar.amount || !bar.volume || bar.volume === 0) return null;
+  return bar.amount / bar.volume / 100;
+}
+
+/**
+ * 从 K 线数据计算 OAMV（活跃市值）日涨跌幅（百分比）。
+ *
+ * 数学推导：
+ *   OAMV  = VWAP × CAPITAL / 10^8  (均价 × 流通盘亿)
+ *   OAMV_change% = (OAMV - OAMV昨) / OAMV昨 × 100
+ *                = (VWAP_today - VWAP_yesterday) / VWAP_yesterday × 100
+ *   （CAPITAL 日间几乎不变，在涨跌幅的分子分母中约掉）
+ *
+ * 使用最后两根 bar（今日/昨日）。返回 NaN 表示数据不足。
+ */
+export function computeOamvChange(bars: KlineBar[]): number {
+  if (bars.length < 2) return NaN;
+  const today = bars[bars.length - 1];
+  const yesterday = bars[bars.length - 2];
+
+  const vwapToday = safeVwap(today);
+  const vwapYesterday = safeVwap(yesterday);
+
+  if (vwapToday === null || vwapYesterday === null || vwapYesterday === 0) {
+    return NaN;
+  }
+
+  return ((vwapToday - vwapYesterday) / vwapYesterday) * 100;
 }

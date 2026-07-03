@@ -221,7 +221,8 @@ export default function AdminPage() {
               管理员后台
             </div>
             <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-              用于手动录入指南针「活跃市值（OAMV）」等无法通过公开行情接口获取的数据。
+              系统已通过 K 线行情接口自动计算 OAMV（活跃市值）涨跌幅。
+              下方表单仅用于「可选覆盖」自动计算值，未录入时系统会自动计算。
               所有数据存储在沙盒本地，重启或重新部署后需重新录入。
             </p>
           </div>
@@ -271,117 +272,13 @@ export default function AdminPage() {
 
           {authed === true && (
             <div className="space-y-6 max-w-4xl">
-              <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-              <div className="border border-divider bg-card">
-                <div className="px-5 py-4 border-b border-divider flex items-center justify-between">
-                  <div>
-                    <div className="font-serif-display text-lg">录入活跃市值 OAMV</div>
-                    <div className="mt-0.5 text-xs text-muted-foreground">
-                      百分比涨跌幅，例如 1.23（涨）/ -0.85（跌）
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    退出
-                  </button>
-                </div>
-                <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1.5">
-                      OAMV（%）
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      inputMode="decimal"
-                      value={oamvInput}
-                      onChange={(e) => setOamvInput(e.target.value)}
-                      placeholder="例如 1.23 或 -0.85"
-                      required
-                      className="w-full border border-divider bg-background px-3 py-2 text-sm font-mono outline-none focus:border-foreground/60"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1.5">
-                      备注（可选）
-                    </label>
-                    <input
-                      type="text"
-                      value={noteInput}
-                      onChange={(e) => setNoteInput(e.target.value)}
-                      placeholder="例如：来源指南针，14:50 截图"
-                      maxLength={40}
-                      className="w-full border border-divider bg-background px-3 py-2 text-sm outline-none focus:border-foreground/60"
-                    />
-                  </div>
-                  {error && (
-                    <div className="text-xs text-[color:var(--signal-risk)]">{error}</div>
-                  )}
-                  {okMsg && (
-                    <div className="text-xs text-[color:var(--signal-pass)]">{okMsg}</div>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={submitting || !oamvInput}
-                    className="w-full bg-foreground text-background text-sm py-2.5 hover:opacity-90 disabled:opacity-50"
-                  >
-                    {submitting ? "保存中…" : "保存到首页"}
-                  </button>
-                </form>
-              </div>
-
-              <div className="border border-divider bg-card">
-                <div className="px-5 py-4 border-b border-divider">
-                  <div className="font-serif-display text-lg">当前生效值</div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">
-                    首页大势裁定卡的「活跃市值 OAMV」会优先使用该值
-                  </div>
-                </div>
-                <div className="px-5 py-5 space-y-3 text-sm">
-                  <Row label="OAMV">
-                    {typeof oamvState.oamv === "number" ? (
-                      <span
-                        className={
-                          oamvState.oamv >= 0
-                            ? "font-mono text-[color:var(--quote-up)]"
-                            : "font-mono text-[color:var(--quote-down)]"
-                        }
-                      >
-                        {oamvState.oamv >= 0 ? "+" : ""}
-                        {oamvState.oamv.toFixed(2)}%
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">未录入（首页将退回到上证综指涨跌幅）</span>
-                    )}
-                  </Row>
-                  <Row label="录入时间">
-                    <span className="font-mono text-xs">
-                      {formatDateTime(oamvState.updatedAt)}
-                    </span>
-                  </Row>
-                  <Row label="数据日期">
-                    <span className="font-mono text-xs">{oamvState.date || "-"}</span>
-                  </Row>
-                  <Row label="备注">
-                    <span className="text-xs">{oamvState.updatedBy || "-"}</span>
-                  </Row>
-                </div>
-                <div className="px-5 py-4 border-t border-divider text-xs text-muted-foreground leading-relaxed">
-                  注：当前录入仅对「今日（{new Date().toISOString().slice(0, 10)}）」生效。次日打开仍需重新录入，
-                  避免使用过期数据。
-                </div>
-              </div>
-              </div>
-
               {/* 每日自动预计算 */}
               <div className="border border-divider bg-card">
                 <div className="px-5 py-4 border-b border-divider flex items-center justify-between">
                   <div>
                     <div className="font-serif-display text-lg">收盘后预计算</div>
                     <div className="mt-0.5 text-xs text-muted-foreground">
-                      工作日 15:05 自动跑；也可在录完 OAMV 后手动点「立即执行」，
+                      工作日 15:05 自动跑；也可手动点「立即执行」，
                       <span className="text-foreground">跑完后用户打开网页直接秒回</span>，无需等待筛选。
                     </div>
                   </div>
@@ -465,6 +362,110 @@ export default function AdminPage() {
                   )}
                 </div>
               </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+              <div className="border border-divider bg-card">
+                <div className="px-5 py-4 border-b border-divider flex items-center justify-between">
+                  <div>
+                    <div className="font-serif-display text-lg">录入活跃市值 OAMV（可选覆盖）</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      百分比涨跌幅，例如 1.23（涨）/ -0.85（跌）。留空则自动从 K 线计算。
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    退出
+                  </button>
+                </div>
+                <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1.5">
+                      OAMV（%）
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      inputMode="decimal"
+                      value={oamvInput}
+                      onChange={(e) => setOamvInput(e.target.value)}
+                      placeholder="例如 1.23 或 -0.85"
+                      required
+                      className="w-full border border-divider bg-background px-3 py-2 text-sm font-mono outline-none focus:border-foreground/60"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1.5">
+                      备注（可选）
+                    </label>
+                    <input
+                      type="text"
+                      value={noteInput}
+                      onChange={(e) => setNoteInput(e.target.value)}
+                      placeholder="例如：来源指南针，14:50 截图"
+                      maxLength={40}
+                      className="w-full border border-divider bg-background px-3 py-2 text-sm outline-none focus:border-foreground/60"
+                    />
+                  </div>
+                  {error && (
+                    <div className="text-xs text-[color:var(--signal-risk)]">{error}</div>
+                  )}
+                  {okMsg && (
+                    <div className="text-xs text-[color:var(--signal-pass)]">{okMsg}</div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={submitting || !oamvInput}
+                    className="w-full bg-foreground text-background text-sm py-2.5 hover:opacity-90 disabled:opacity-50"
+                  >
+                    {submitting ? "保存中…" : "保存到首页"}
+                  </button>
+                </form>
+              </div>
+
+              <div className="border border-divider bg-card">
+                <div className="px-5 py-4 border-b border-divider">
+                  <div className="font-serif-display text-lg">当前生效值</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">
+                    管理员录入值会覆盖自动计算值。未录入时系统每天自动从 K 线行情计算。
+                  </div>
+                </div>
+                <div className="px-5 py-5 space-y-3 text-sm">
+                  <Row label="OAMV">
+                    {typeof oamvState.oamv === "number" ? (
+                      <span
+                        className={
+                          oamvState.oamv >= 0
+                            ? "font-mono text-[color:var(--quote-up)]"
+                            : "font-mono text-[color:var(--quote-down)]"
+                        }
+                      >
+                        {oamvState.oamv >= 0 ? "+" : ""}
+                        {oamvState.oamv.toFixed(2)}%
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">未录入（首页自动从 K 线行情计算 OAMV）</span>
+                    )}
+                  </Row>
+                  <Row label="录入时间">
+                    <span className="font-mono text-xs">
+                      {formatDateTime(oamvState.updatedAt)}
+                    </span>
+                  </Row>
+                  <Row label="数据日期">
+                    <span className="font-mono text-xs">{oamvState.date || "-"}</span>
+                  </Row>
+                  <Row label="备注">
+                    <span className="text-xs">{oamvState.updatedBy || "-"}</span>
+                  </Row>
+                </div>
+                <div className="px-5 py-4 border-t border-divider text-xs text-muted-foreground leading-relaxed">
+                  注：当前录入仅对「今日（{new Date().toISOString().slice(0, 10)}）」生效。次日打开仍需重新录入，
+                  避免使用过期数据。
+                </div>
+              </div>
+            </div>
             </div>
           )}
         </section>

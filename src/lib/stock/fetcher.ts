@@ -61,6 +61,7 @@ export async function fetchKline(code: string, opts: FetchOptions = {}): Promise
       high: Number(r[3]),
       low: Number(r[4]),
       volume: Number(r[5]),
+      amount: Number(r[6] ?? 0),
     };
   });
 }

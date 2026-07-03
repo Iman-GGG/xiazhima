@@ -5,7 +5,8 @@ export interface KlineBar {
   close: number;
   high: number;
   low: number;
-  volume: number; // 单位：手
+  volume: number; // 成交量，单位：手（1手=100股）
+  amount: number; // 成交额，单位：元（AMOUNT，用于计算 OAMV/VWAP）
 }
 
 export interface StockMeta {
@@ -108,7 +109,7 @@ export interface MarketJudgement {
   bbiAbove: boolean;
   ma5Slope: number; // 短期 MA5 斜率（百分比）
   oamv: number; // 活跃市值（指南针 OAMV）—— 百分比涨跌幅
-  oamvSource?: "admin" | "index"; // admin=管理员录入；index=上证综指涨跌幅（近似）
+  oamvSource?: "admin" | "kline" | "index"; // admin=管理员录入；kline=K线VWAP公式计算；index=上证综指涨跌幅（近似）
   oamvUpdatedAt?: string; // 管理员录入时间
   oamvUpdatedBy?: string; // 管理员录入备注
   updatedAt: string;

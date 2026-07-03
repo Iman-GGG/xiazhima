@@ -38,6 +38,7 @@ function makeTrendBars(
       high,
       low,
       volume: volumes ? volumes[i] : 10_000_000,
+      amount: 0,
     };
   });
 }
@@ -51,6 +52,7 @@ function makeFlatBars(count: number, price = 10, volume = 10_000_000): KlineBar[
     high: price * 1.02,
     low: price * 0.98,
     volume,
+    amount: 0,
   }));
 }
 
@@ -179,20 +181,20 @@ describe("dgxSeries", () => {
 // ===================== 形态识别 =====================
 describe("upperShadow", () => {
   it("returns zero for candle with same high as body top", () => {
-    const bar: KlineBar = { date: "", open: 10, close: 12, high: 12, low: 9, volume: 1 };
+    const bar: KlineBar = { date: "", open: 10, close: 12, high: 12, low: 9, volume: 1, amount: 0 };
     expect(upperShadow(bar).length).toBe(0);
     expect(upperShadow(bar).ratio).toBe(0);
   });
 
   it("computes ratio correctly", () => {
     // open=10, close=12 (body=2), high=14 → upper=14-12=2, ratio=2/2=1
-    const bar: KlineBar = { date: "", open: 10, close: 12, high: 14, low: 9, volume: 1 };
+    const bar: KlineBar = { date: "", open: 10, close: 12, high: 14, low: 9, volume: 1, amount: 0 };
     expect(upperShadow(bar).length).toBe(2);
     expect(upperShadow(bar).ratio).toBeCloseTo(1, 5);
   });
 
   it("body zero → ratio Infinity", () => {
-    const bar: KlineBar = { date: "", open: 10, close: 10, high: 15, low: 5, volume: 1 };
+    const bar: KlineBar = { date: "", open: 10, close: 10, high: 15, low: 5, volume: 1, amount: 0 };
     expect(upperShadow(bar).ratio).toBe(Infinity);
   });
 });
@@ -200,7 +202,7 @@ describe("upperShadow", () => {
 describe("lowerShadow", () => {
   it("computes lower shadow correctly", () => {
     // open=12, close=10 (lower=10), low=8 → lower=10-8=2, body=2, ratio=1
-    const bar: KlineBar = { date: "", open: 12, close: 10, high: 13, low: 8, volume: 1 };
+    const bar: KlineBar = { date: "", open: 12, close: 10, high: 13, low: 8, volume: 1, amount: 0 };
     expect(lowerShadow(bar).length).toBe(2);
     expect(lowerShadow(bar).ratio).toBeCloseTo(1, 5);
   });
@@ -208,21 +210,21 @@ describe("lowerShadow", () => {
 
 describe("isYangBaoYin", () => {
   it("detects yang-bao-yin pattern", () => {
-    const prev: KlineBar = { date: "", open: 11, close: 9, high: 11.5, low: 8.5, volume: 1 };
-    const curr: KlineBar = { date: "", open: 8.5, close: 11.5, high: 12, low: 8, volume: 2 };
+    const prev: KlineBar = { date: "", open: 11, close: 9, high: 11.5, low: 8.5, volume: 1, amount: 0 };
+    const curr: KlineBar = { date: "", open: 8.5, close: 11.5, high: 12, low: 8, volume: 2, amount: 0 };
     // prev: 阴线 (close<open), curr: 阳线, curr.open ≤ prev.close (8.5≤9), curr.close ≥ prev.open (11.5≥11)
     expect(isYangBaoYin(prev, curr)).toBe(true);
   });
 
   it("rejects when prev is yang", () => {
-    const prev: KlineBar = { date: "", open: 9, close: 11, high: 12, low: 8, volume: 1 };
-    const curr: KlineBar = { date: "", open: 8, close: 12, high: 13, low: 7, volume: 2 };
+    const prev: KlineBar = { date: "", open: 9, close: 11, high: 12, low: 8, volume: 1, amount: 0 };
+    const curr: KlineBar = { date: "", open: 8, close: 12, high: 13, low: 7, volume: 2, amount: 0 };
     expect(isYangBaoYin(prev, curr)).toBe(false);
   });
 
   it("rejects when body doesn't fully engulf", () => {
-    const prev: KlineBar = { date: "", open: 11, close: 9, high: 11.5, low: 8.5, volume: 1 };
-    const curr: KlineBar = { date: "", open: 9.5, close: 10.5, high: 11, low: 9, volume: 2 };
+    const prev: KlineBar = { date: "", open: 11, close: 9, high: 11.5, low: 8.5, volume: 1, amount: 0 };
+    const curr: KlineBar = { date: "", open: 9.5, close: 10.5, high: 11, low: 9, volume: 2, amount: 0 };
     // curr.open (9.5) > prev.close (9) — not fully engulfing
     expect(isYangBaoYin(prev, curr)).toBe(false);
   });
@@ -230,18 +232,18 @@ describe("isYangBaoYin", () => {
 
 describe("isMidYang", () => {
   it("returns true for yang candle with ≥3% body", () => {
-    const bar: KlineBar = { date: "", open: 10, close: 10.4, high: 10.5, low: 9.9, volume: 1 };
+    const bar: KlineBar = { date: "", open: 10, close: 10.4, high: 10.5, low: 9.9, volume: 1, amount: 0 };
     // (10.4-10)/10 = 4% ≥ 3%
     expect(isMidYang(bar)).toBe(true);
   });
 
   it("returns false for small yang", () => {
-    const bar: KlineBar = { date: "", open: 10, close: 10.1, high: 10.2, low: 9.9, volume: 1 };
+    const bar: KlineBar = { date: "", open: 10, close: 10.1, high: 10.2, low: 9.9, volume: 1, amount: 0 };
     expect(isMidYang(bar)).toBe(false);
   });
 
   it("returns false for yin candle", () => {
-    const bar: KlineBar = { date: "", open: 10, close: 9, high: 10.2, low: 8.9, volume: 1 };
+    const bar: KlineBar = { date: "", open: 10, close: 9, high: 10.2, low: 8.9, volume: 1, amount: 0 };
     expect(isMidYang(bar)).toBe(false);
   });
 });
@@ -275,6 +277,7 @@ describe("isPullbackAfterRise", () => {
       high: close * 1.02,
       low: close * 0.97,
       volume: 10_000_000,
+      amount: 0,
     }));
     const result = isPullbackAfterRise(bars, 20, 8, 3);
     // uplift from ~10 to 12 = ~20% ≥ 8%
@@ -285,8 +288,8 @@ describe("isPullbackAfterRise", () => {
 describe("isBenignPullback", () => {
   it("detects benign pullback (price down + volume ≤ 75% of yesterday)", () => {
     const bars: KlineBar[] = [
-      { date: "", open: 10, close: 10.5, high: 10.6, low: 9.9, volume: 1000 },
-      { date: "", open: 10.5, close: 10.2, high: 10.6, low: 10.1, volume: 700 }, // -2.8%, vol 70%
+      { date: "", open: 10, close: 10.5, high: 10.6, low: 9.9, volume: 1000, amount: 0 },
+      { date: "", open: 10.5, close: 10.2, high: 10.6, low: 10.1, volume: 700, amount: 0 }, // -2.8%, vol 70%
     ];
     expect(isBenignPullback(bars).pass).toBe(true);
   });
