@@ -23,7 +23,6 @@ function makeBar(
     high: overrides.high ?? 10,
     low: overrides.low ?? 10,
     volume: overrides.volume ?? 10_000_000,
-    amount: overrides.amount ?? 0,
   };
 }
 
@@ -50,7 +49,6 @@ function buildB1CandidateBars(): KlineBar[] {
       high: close + 0.1,
       low: close - 0.15,
       volume: 5_000_000,
-    amount: 0,
     });
   }
 
@@ -64,7 +62,6 @@ function buildB1CandidateBars(): KlineBar[] {
       high: close + 0.3,
       low: close - 0.3,
       volume: 8_000_000 + i * 200_000, // rising volume
-    amount: 0,
     });
   }
 
@@ -78,7 +75,6 @@ function buildB1CandidateBars(): KlineBar[] {
       high: close + 0.2,
       low: close - 0.4, // wider low range to push KDJ down
       volume: 5_000_000 - i * 300_000, // shrinking
-    amount: 0,
     });
   }
 
@@ -99,7 +95,6 @@ function buildB1PassBars(): KlineBar[] {
       high: close + 0.05,
       low: close - 0.05,
       volume: 5_000_000,
-    amount: 0,
     });
   }
 
@@ -113,7 +108,6 @@ function buildB1PassBars(): KlineBar[] {
       high: close + 0.5,
       low: close - 0.5,
       volume: 10_000_000 + i * 300_000,
-    amount: 0,
     });
   }
 
@@ -127,7 +121,6 @@ function buildB1PassBars(): KlineBar[] {
       high: close + 0.3,
       low: close - 0.8, // wide low to drive KDJ negative
       volume: 8_000_000 - i * 800_000,
-    amount: 0,
     });
   }
 
@@ -148,7 +141,6 @@ function buildS1CandidateBars(): KlineBar[] {
       high: close + 0.1,
       low: close - 0.1,
       volume: 5_000_000,
-    amount: 0,
     });
   }
 
@@ -162,7 +154,6 @@ function buildS1CandidateBars(): KlineBar[] {
       high: close + 0.8,
       low: close - 0.5,
       volume: 8_000_000,
-    amount: 0,
     });
   }
 
@@ -175,7 +166,6 @@ function buildS1CandidateBars(): KlineBar[] {
     high: 22,      // 长上影
     low: 17.5,
     volume: 25_000_000, // 放量（远超 5日均量 8M）
-  amount: 0,
   });
 
   return bars;
@@ -336,7 +326,6 @@ function makeBBIAboveBars(count: number): KlineBar[] {
     high: 10 * 1.02,
     low: 10,
     volume: 10_000_000,
-    amount: 0,
   }));
 }
 

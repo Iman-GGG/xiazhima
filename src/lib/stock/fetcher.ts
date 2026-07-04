@@ -1,7 +1,7 @@
 import type { KlineBar, StockMeta } from "./types";
 
 // 腾讯财经历史 K 线接口
-// https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=sh600519,day,,,90,qfq
+// https://ifzq.gtimg.cn/appstock/app/fqkline/get?param=sh600519,day,,,90,qfq
 
 export interface FetchOptions {
   count?: number; // 获取多少根日线，默认 60
@@ -25,7 +25,7 @@ interface TencentKlineResp {
 export async function fetchKline(code: string, opts: FetchOptions = {}): Promise<KlineBar[]> {
   const count = opts.count ?? 60;
   const fq = opts.fq ?? "qfq";
-  const url = `https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=${encodeURIComponent(
+  const url = `https://ifzq.gtimg.cn/appstock/app/fqkline/get?param=${encodeURIComponent(
     code,
   )},day,,,${count},${fq}`;
   const ctrl = new AbortController();
@@ -61,7 +61,6 @@ export async function fetchKline(code: string, opts: FetchOptions = {}): Promise
       high: Number(r[3]),
       low: Number(r[4]),
       volume: Number(r[5]),
-      amount: Number(r[6] ?? 0),
     };
   });
 }
@@ -70,10 +69,9 @@ interface TencentSnapshot {
   name: string;
   price: number;
   prevClose: number;
-  change: number; // 涨跌幅（%）
-  turnover: number; // 换手率（%），字段[38]
-  marketCap: number; // 流通市值（亿元），字段[44]
-  totalCap: number; // 总市值（亿元），字段[45]
+  change: number; // 涨跌幅
+  marketCap: number; // 流通市值（亿元）
+  totalCap: number; // 总市值（亿元）
 }
 
 /**
@@ -110,12 +108,11 @@ export async function fetchSnapshot(code: string): Promise<TencentSnapshot> {
   if (!m) throw new Error(`fetchSnapshot ${code}: parse error`);
   const fields = m[1].split("~");
   // 字段位定义参考腾讯接口文档：
-  // 1=名称, 2=代码, 3=当前价, 4=昨收, 5=今开, ... 32=涨跌幅, 38=换手率
+  // 1=名称, 2=代码, 3=当前价, 4=昨收, 5=今开, ... 32=涨跌幅
   const price = Number(fields[3]);
   const prevClose = Number(fields[4]);
   const change = Number(fields[32]);
   const name = fields[1];
-  const turnover = Number(fields[38]);
   // 字段 44: 流通市值（亿元）；字段 45: 总市值（亿元）
   const marketCap = Number(fields[44]);
   const totalCap = Number(fields[45]);
@@ -124,7 +121,6 @@ export async function fetchSnapshot(code: string): Promise<TencentSnapshot> {
     price: Number.isFinite(price) ? price : 0,
     prevClose: Number.isFinite(prevClose) ? prevClose : 0,
     change: Number.isFinite(change) ? change : 0,
-    turnover: Number.isFinite(turnover) ? turnover : 0,
     marketCap: Number.isFinite(marketCap) ? marketCap : 0,
     totalCap: Number.isFinite(totalCap) ? totalCap : 0,
   };
@@ -158,13 +154,4 @@ export async function mapWithConcurrency<T, R>(
  */
 export function fallbackName(code: string, meta?: StockMeta): string {
   return meta?.name ?? code.toUpperCase();
-}
-
-/**
- * 从流通市值（亿元）和股价反推流通股本（股）。
- * FloatShares = marketCap_亿 × 10^8 / price
- */
-export function deriveFloatShares(marketCapYi: number, price: number): number {
-  if (!marketCapYi || !price || price <= 0) return 0;
-  return (marketCapYi * 1e8) / price;
 }

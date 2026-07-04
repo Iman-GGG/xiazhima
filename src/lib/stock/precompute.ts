@@ -18,7 +18,6 @@ import {
   type ScreenScope,
 } from "@/lib/stock/universe";
 import type { StockAnalysis, MarketJudgement, KlineBar } from "@/lib/stock/types";
-import { computeOamvAggregate, type OamvStockData } from "@/lib/stock/oamv";
 
 const CACHE_DIR = (() => {
   // 生产环境唯一可写目录是 /tmp
@@ -167,10 +166,6 @@ interface RawEntry {
   code: string;
   marketCap: number;
   analysis: StockAnalysis;
-  /** OAMV 聚合所需：K 线数据（至少 21 根） */
-  bars: KlineBar[];
-  /** OAMV 聚合所需：收盘价 */
-  price: number;
 }
 
 async function computeAllStocks(): Promise<RawEntry[]> {
@@ -185,11 +180,10 @@ async function computeAllStocks(): Promise<RawEntry[]> {
       if (!bars || bars.length < 30) return null;
       const marketCap = snapshot?.marketCap ?? meta.marketCap ?? 0;
       const totalCap = snapshot?.totalCap ?? marketCap;
-      const price = snapshot?.price ?? 0;
       const realName = snapshot?.name ?? meta.name;
       const analysis = analyzeStock({ code: meta.code, name: realName }, bars, marketCap, totalCap);
       if (!analysis) return null;
-      return { code: meta.code, marketCap, analysis, bars, price } satisfies RawEntry;
+      return { code: meta.code, marketCap, analysis } satisfies RawEntry;
     } catch {
       return null;
     } finally {
@@ -248,24 +242,6 @@ export async function runPrecompute(reason = "manual"): Promise<PrecomputeData |
     console.log(`[Precompute] start reason=${reason} at ${new Date().toISOString()}`);
     const market = await computeMarket();
     const entries = await computeAllStocks();
-
-    // 全 A 逐股聚合 OAMV
-    const oamvInputs: OamvStockData[] = entries.map((e) => ({
-      marketCap: e.marketCap,
-      price: e.price,
-      bars: e.bars,
-    }));
-    const oamvResult = computeOamvAggregate(oamvInputs);
-
-    // 覆写 market 中的 OAMV 字段
-    if (market) {
-      market.market.oamv = Number.isFinite(oamvResult.change) ? oamvResult.change : market.market.oamv;
-      market.market.oamvTotal = oamvResult.today;
-      market.market.oamvPrevTotal = oamvResult.yesterday;
-      market.market.oamvSource = "aggregate";
-      market.market.oamvDate = cstDateStr();
-    }
-
     const data: PrecomputeData = {
       version: SCHEMA_VERSION,
       date: cstDateStr(),
@@ -278,16 +254,19 @@ export async function runPrecompute(reason = "manual"): Promise<PrecomputeData |
         all: buildScreenPayload("all", entries),
       },
     };
-    memCache = data;
-    saveToDisk(data);
+    // 若全 A 扫描无结果（API 故障等），不落盘，避免覆盖上一次成功缓存
+    if (entries.length > 0) {
+      memCache = data;
+      saveToDisk(data);
+    } else {
+      console.warn("[Precompute] skipping save: 0 entries (possible API failure)");
+    }
     console.log(
       `[Precompute] done reason=${reason} duration=${(data.durationMs / 1000).toFixed(1)}s ` +
         `entries=${entries.length} ` +
         `major.b1=${data.screen.major.summary.b1Count} ` +
         `full.b1=${data.screen.full.summary.b1Count} ` +
-        `all.b1=${data.screen.all.summary.b1Count} ` +
-        `oamv=${oamvResult.today.toFixed(0)}亿 / ${Number.isFinite(oamvResult.change) ? (oamvResult.change >= 0 ? "+" : "") + oamvResult.change.toFixed(2) + "%" : "N/A"} ` +
-        `active=${oamvResult.activeCount}/${oamvResult.totalCount}`,
+        `all.b1=${data.screen.all.summary.b1Count}`,
     );
     return data;
   } catch (e) {

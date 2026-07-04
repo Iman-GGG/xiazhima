@@ -533,8 +533,8 @@ export function judgeMarket(meta: StockMeta, bars: KlineBar[]): MarketJudgement 
 
   const bbiAbove = !Number.isNaN(bbiVal) && last.close > bbiVal;
 
-  // 活跃市值（OAMV）：使用上证综指涨跌幅作为兜底近似；
-  // 真实 OAMV 由预计算管线的全 A 逐股聚合结果覆写。
+  // 活跃市值（OAMV）：管理员手动录入值为准；
+  // 未录入时使用上证综指涨跌幅作为近似。
   const oamv = change;
 
   let trend: MarketJudgement["trend"] = "neutral";

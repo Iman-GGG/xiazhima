@@ -58,14 +58,13 @@ export async function GET() {
       };
     } else if (payload && typeof payload === "object") {
       const obj = payload as { market: Record<string, unknown>; lastBars: unknown };
-      const m = obj.market;
-      // 仅对缺少 oamvSource 的旧缓存兜底
-      if (!m.oamvSource) {
-        payload = {
-          ...obj,
-          market: { ...m, oamvSource: "index" as const },
-        };
-      }
+      payload = {
+        ...obj,
+        market: {
+          ...obj.market,
+          oamvSource: "index" as const,
+        },
+      };
     }
 
     // OAMV 阈值修正大势趋势
