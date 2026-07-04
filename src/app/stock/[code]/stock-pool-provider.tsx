@@ -27,31 +27,11 @@ interface StockPoolContextValue {
 
 const StockPoolContext = createContext<StockPoolContextValue | null>(null);
 
-const CATEGORY_ORDER = ["b1Ready", "b2Ready", "dz30Ready", "s1Ready"] as const;
-const CATEGORY_LABEL: Record<string, StockPoolItem["category"]> = {
-  b1Ready: "b1",
-  b2Ready: "b2",
-  dz30Ready: "dz30",
-  s1Ready: "s1",
-};
-
 async function fetchPool(scope: string): Promise<StockPoolItem[]> {
-  const res = await fetch(`/api/screen?scope=${scope}`);
+  const res = await fetch(`/api/pool?scope=${scope}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
-  const seen = new Set<string>();
-  const stocks: StockPoolItem[] = [];
-  for (const cat of CATEGORY_ORDER) {
-    const arr = data[cat] as Array<{ code: string; name: string; change: number }> | undefined;
-    if (!arr) continue;
-    for (const s of arr) {
-      if (!seen.has(s.code)) {
-        seen.add(s.code);
-        stocks.push({ code: s.code, name: s.name, category: CATEGORY_LABEL[cat], change: s.change });
-      }
-    }
-  }
-  return stocks;
+  return (data.stocks || []) as StockPoolItem[];
 }
 
 function readScope(): string {
