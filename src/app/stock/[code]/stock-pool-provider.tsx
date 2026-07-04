@@ -62,13 +62,46 @@ interface PoolResponse {
   pools: Record<string, { stocks: StockPoolItem[] }>;
 }
 
+interface ScreenResponse {
+  b1Ready?: StockPoolItem[];
+  b2Ready?: StockPoolItem[];
+  dz30Ready?: StockPoolItem[];
+  s1Ready?: StockPoolItem[];
+}
+
+async function fetchFromScreen(scope: string): Promise<StockPoolItem[]> {
+  const res = await fetch(`/api/screen?scope=${scope}`);
+  if (!res.ok) return [];
+  const data = (await res.json()) as ScreenResponse;
+  const seen = new Set<string>();
+  const stocks: StockPoolItem[] = [];
+  const cats = ["b1Ready", "b2Ready", "dz30Ready", "s1Ready"] as const;
+  const label: Record<string, StockPoolItem["category"]> = { b1Ready: "b1", b2Ready: "b2", dz30Ready: "dz30", s1Ready: "s1" };
+  for (const cat of cats) {
+    const arr = data[cat];
+    if (!arr) continue;
+    for (const s of arr) {
+      if (!seen.has(s.code)) {
+        seen.add(s.code);
+        stocks.push({ code: s.code, name: s.name, category: label[cat], change: s.change });
+      }
+    }
+  }
+  return stocks;
+}
+
 async function fetchAllPools(): Promise<Record<string, StockPoolItem[]>> {
   const res = await fetch("/api/pool");
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = (await res.json()) as PoolResponse;
   const out: Record<string, StockPoolItem[]> = {};
   for (const [scope, p] of Object.entries(data.pools)) {
-    out[scope] = p.stocks || [];
+    let stocks = p.stocks || [];
+    // 预计算缓存无数据时，回退到 /api/screen（利用其内存缓存或实时计算）
+    if (stocks.length === 0) {
+      stocks = await fetchFromScreen(scope);
+    }
+    out[scope] = stocks;
   }
   return out;
 }
