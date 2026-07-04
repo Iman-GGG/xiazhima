@@ -5,6 +5,7 @@ import { StockSearch } from "@/components/feature/stock-search";
 import { SectionHeader } from "@/components/feature/section-header";
 import { PriceChart } from "@/components/feature/price-chart";
 import { RememberStock } from "@/components/feature/last-stock-bridge";
+import { StockPoolNav } from "./stock-pool-nav";
 import type { KlineBar, StockAnalysis } from "@/lib/stock/types";
 import { analyzeStock } from "@/lib/stock/b1";
 import { fetchKline, fetchSnapshot } from "@/lib/stock/fetcher";
@@ -67,7 +68,10 @@ export default async function StockDetailPage({ params }: PageProps) {
   return (
     <div className="px-3 sm:px-5 py-2 sm:py-3 space-y-5 max-w-5xl">
       <RememberStock code={lower} />
-      <Breadcrumb code={lower} name={analysis?.name} />
+      <div className="flex items-center justify-between gap-2">
+        <Breadcrumb code={lower} name={analysis?.name} />
+        <StockPoolNav />
+      </div>
       <StockSearch initialCode={lower} />
 
       {!ok || !analysis ? (
