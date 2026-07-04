@@ -28,7 +28,7 @@ interface StockPoolContextValue {
 const StockPoolContext = createContext<StockPoolContextValue | null>(null);
 
 // ---- sessionStorage 缓存 ----
-const CACHE_KEY = "xzm-pool-all";
+const CACHE_KEY = "xzm-pool-v2"; // bump version to invalidate stale caches
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
@@ -53,6 +53,9 @@ function readCache(): Record<string, StockPoolItem[]> | null {
 
 function writeCache(pools: Record<string, StockPoolItem[]>) {
   try {
+    // 不缓存空结果，避免下次读到空导致闪"暂无数据"
+    const hasAny = Object.values(pools).some((arr) => arr.length > 0);
+    if (!hasAny) return;
     sessionStorage.setItem(CACHE_KEY, JSON.stringify({ date: todayStr(), pools }));
   } catch { /* ignore */ }
 }
