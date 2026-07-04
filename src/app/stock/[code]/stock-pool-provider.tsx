@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-// ---- 股票池条目 ----
+// ---- 类型 ----
 export interface StockPoolItem {
   code: string;
   name: string;
@@ -28,7 +28,7 @@ interface StockPoolContextValue {
 const StockPoolContext = createContext<StockPoolContextValue | null>(null);
 
 // ---- sessionStorage 缓存 ----
-const CACHE_KEY_PREFIX = "xzm-pool-";
+const CACHE_KEY = "xzm-pool-all";
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
@@ -36,36 +36,41 @@ function todayStr(): string {
 
 interface CacheEntry {
   date: string;
-  stocks: StockPoolItem[];
+  pools: Record<string, StockPoolItem[]>;
 }
 
-function readCache(scope: string): StockPoolItem[] | null {
+function readCache(): Record<string, StockPoolItem[]> | null {
   try {
-    const raw = sessionStorage.getItem(CACHE_KEY_PREFIX + scope);
+    const raw = sessionStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const entry = JSON.parse(raw) as CacheEntry;
-    if (entry.date !== todayStr()) return null; // 过期
-    return entry.stocks;
+    if (entry.date !== todayStr()) return null;
+    return entry.pools;
   } catch {
     return null;
   }
 }
 
-function writeCache(scope: string, stocks: StockPoolItem[]) {
+function writeCache(pools: Record<string, StockPoolItem[]>) {
   try {
-    const entry: CacheEntry = { date: todayStr(), stocks };
-    sessionStorage.setItem(CACHE_KEY_PREFIX + scope, JSON.stringify(entry));
-  } catch {
-    // sessionStorage 满了就忽略
-  }
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ date: todayStr(), pools }));
+  } catch { /* ignore */ }
 }
 
 // ---- API ----
-async function fetchPool(scope: string): Promise<StockPoolItem[]> {
-  const res = await fetch(`/api/pool?scope=${scope}`);
+interface PoolResponse {
+  pools: Record<string, { stocks: StockPoolItem[] }>;
+}
+
+async function fetchAllPools(): Promise<Record<string, StockPoolItem[]>> {
+  const res = await fetch("/api/pool");
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  return (data.stocks || []) as StockPoolItem[];
+  const data = (await res.json()) as PoolResponse;
+  const out: Record<string, StockPoolItem[]> = {};
+  for (const [scope, p] of Object.entries(data.pools)) {
+    out[scope] = p.stocks || [];
+  }
+  return out;
 }
 
 function readScope(): string {
@@ -77,10 +82,13 @@ function readScope(): string {
 export function StockPoolProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [stocks, setStocks] = useState<StockPoolItem[]>([]);
+  const [allPools, setAllPools] = useState<Record<string, StockPoolItem[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scope, setScopeState] = useState("major");
+
+  // 从 allPools 按 scope 取当前列表
+  const stocks = useMemo(() => allPools[scope] || [], [allPools, scope]);
 
   const currentCode = useMemo(() => {
     const segs = pathname.split("/");
@@ -108,32 +116,25 @@ export function StockPoolProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") localStorage.setItem("xzm-scope", s);
   }, []);
 
-  // 加载股票池（带 sessionStorage 缓存）
+  // 首次加载：拉全部 scope 并缓存
   useEffect(() => {
     const s = readScope();
     setScopeState(s);
 
-    // 1) 先读缓存，有就直接用
-    const cached = readCache(s);
-    if (cached && cached.length > 0) {
-      setStocks(cached);
+    const cached = readCache();
+    if (cached) {
+      setAllPools(cached);
       setLoading(false);
-      setError(null);
-      // 后台静默刷新（不阻塞）
-      fetchPool(s)
-        .then((fresh) => { setStocks(fresh); writeCache(s, fresh); })
-        .catch(() => { /* 静默失败，缓存仍可用 */ });
+      // 后台静默刷新
+      fetchAllPools()
+        .then((fresh) => { setAllPools(fresh); writeCache(fresh); })
+        .catch(() => {});
       return;
     }
 
-    // 2) 无缓存 → 正常加载
     setLoading(true);
-    setError(null);
-    fetchPool(s)
-      .then((fresh) => {
-        setStocks(fresh);
-        writeCache(s, fresh);
-      })
+    fetchAllPools()
+      .then((fresh) => { setAllPools(fresh); writeCache(fresh); })
       .catch((e) => setError(e instanceof Error ? e.message : "加载失败"))
       .finally(() => setLoading(false));
   }, []);
