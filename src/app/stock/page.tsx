@@ -1,66 +1,76 @@
-import Link from "next/link";
-import { Suspense } from "react";
-import { StockSearch } from "@/components/feature/stock-search";
-import { SectionHeader } from "@/components/feature/section-header";
-import { LastStockRedirect } from "@/components/feature/last-stock-bridge";
-import { FULL_UNIVERSE, TOTAL_COUNT } from "@/lib/stock/universe";
+import { redirect } from "next/navigation";
+import { fetchKline } from "@/lib/stock/fetcher";
+import { getUniverseByScope } from "@/lib/stock/universe";
+import { analyzeStock } from "@/lib/stock/b1";
+import { getPrecomputedScreen } from "@/lib/stock/precompute";
+import type { ScreenScope } from "@/lib/stock/universe";
 
-export const metadata = {
-  title: "个股解析",
-};
+export const dynamic = "force-dynamic";
 
-export default function StockIndexPage() {
-  // 取流通市值最大的 16 只作为快捷入口
-  const sample = [...FULL_UNIVERSE]
-    .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
-    .slice(0, 16);
+/**
+ * /stock（无指定 code）
+ *
+ * 自动从预计算缓存（或实时算）取今日股票池第一只，跳转。
+ * 若池为空则回落至 Top-1 蓝筹股。
+ */
+export default async function StockIndexPage() {
+  let firstCode: string | null = null;
+
+  // 1) 优先从预计算缓存拿池中第一只
+  try {
+    const scopes: ScreenScope[] = ["major", "full", "all"];
+    for (const scope of scopes) {
+      const cached = getPrecomputedScreen(scope);
+      if (cached) {
+        const list =
+          cached.b1Ready[0] ??
+          cached.b2Ready[0] ??
+          cached.dz30Ready[0] ??
+          cached.s1Ready[0];
+        if (list) {
+          firstCode = list.code;
+          break;
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2) 无缓存 → 实时算第一只蓝筹
+  if (!firstCode) {
+    const major = [...getUniverseByScope("major")];
+    if (major.length > 0) {
+      // 抓第一只能成功解析的
+      for (let i = 0; i < Math.min(20, major.length); i++) {
+        try {
+          const meta = major[i];
+          const bars = await fetchKline(meta.code, { count: 60 }).catch(() => []);
+          if (bars.length < 30) continue;
+          const analysis = analyzeStock(meta, bars, meta.marketCap ?? 0);
+          if (analysis) {
+            firstCode = meta.code;
+            break;
+          }
+        } catch {
+          continue;
+        }
+      }
+      // 3) 都失败了 → 取第一只蓝筹直接跳（让它自己报错）
+      if (!firstCode && major.length > 0) {
+        firstCode = major[0].code;
+      }
+    }
+  }
+
+  if (firstCode) {
+    redirect(`/stock/${firstCode}`);
+  }
+
+  // 极端情况：没有任何股票
   return (
-    <div className="mx-auto max-w-6xl px-3 sm:px-5 py-6 sm:py-8 space-y-6">
-      <Suspense fallback={null}>
-        <LastStockRedirect />
-      </Suspense>
-      <section className="border border-divider bg-card">
-        <div className="px-6 pt-6 pb-2">
-          <h1 className="font-serif text-2xl">个股战法解析</h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-2xl leading-relaxed">
-            输入股票代码或名称，规则裁断台将逐条核查 SF战法的 5 项 B1 条件、检测当下趋势状态与买卖信号，并给出 BBI / KDJ / 量能的真实数值。
-          </p>
-        </div>
-        <div className="px-6 pb-6">
-          <StockSearch />
-          <p className="text-[11px] text-muted-foreground mt-2">
-            支持的代码格式：<span className="font-num">sh / sz / bj + 6 位数字</span>，例如 <span className="font-num">sh600519</span>、<span className="font-num">sz000858</span>。
-          </p>
-        </div>
-      </section>
-
-      <section className="border border-divider bg-card">
-        <SectionHeader
-          title="蓝筹快捷入口"
-          subtitle="按流通市值排序的 Top 16 标的，点击直接进入战法解析。"
-          badge={`覆盖全 A · 共 ${TOTAL_COUNT} 只`}
-        />
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-          {sample.map((s, i) => (
-            <Link
-              key={s.code}
-              href={`/stock/${s.code}`}
-              className={`px-5 py-3 text-sm hover:bg-muted transition-colors ${
-                (i % 4 !== 3) ? "border-r border-divider" : ""
-              } border-b border-divider`}
-            >
-              <div className="font-medium">{s.name}</div>
-              <div className="font-num text-[11px] text-muted-foreground">
-                {s.code.toUpperCase()}
-              </div>
-            </Link>
-          ))}
-        </div>
-        <div className="px-5 py-3 text-[11px] text-muted-foreground border-t border-divider">
-          搜索框支持沪深京三市全部 {TOTAL_COUNT} 只 A 股代码、名称、拼音首字母直查。
-        </div>
-      </section>
+    <div className="mx-auto max-w-6xl px-3 py-12 text-center text-sm text-muted-foreground">
+      暂无可用股票数据，请稍后重试。
     </div>
   );
 }
-

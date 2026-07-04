@@ -65,7 +65,7 @@ export default async function StockDetailPage({ params }: PageProps) {
   const { ok, analysis, allBars, error } = await fetchAnalysis(lower);
 
   return (
-    <div className="mx-auto max-w-6xl px-3 sm:px-5 py-5 sm:py-6 space-y-5">
+    <div className="px-3 sm:px-5 py-2 sm:py-3 space-y-5 max-w-5xl">
       <RememberStock code={lower} />
       <Breadcrumb code={lower} name={analysis?.name} />
       <StockSearch initialCode={lower} />
