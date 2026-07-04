@@ -56,28 +56,17 @@ export async function GET() {
           oamvDate: adminState.oamvDate,
         },
       };
-    } else if (payload && typeof payload === "object") {
-      const obj = payload as { market: Record<string, unknown>; lastBars: unknown };
-      payload = {
-        ...obj,
-        market: {
-          ...obj.market,
-          oamvSource: "index" as const,
-        },
-      };
-    }
 
-    // OAMV 阈值修正大势趋势
-    // 活跃市值 ≤ -2.3%：资金大量流出 → 弱势
-    // 活跃市值 ≥ 4%：  资金大量流入 → 强势
-    if (payload && typeof payload === "object") {
+      // OAMV 阈值修正大势趋势（仅管理员已录入时生效）
+      // 活跃市值 ≤ -2.3%：资金大量流出 → 弱势
+      // 活跃市值 ≥ 4%：  资金大量流入 → 强势
       const m = (payload as { market: Record<string, unknown> }).market;
-      const oamvVal = typeof m.oamv === "number" ? m.oamv : 0;
-      if (oamvVal <= -2.3) {
+      const oamvVal = typeof adminState.oamv === "number" ? adminState.oamv : NaN;
+      if (Number.isFinite(oamvVal) && oamvVal <= -2.3) {
         m.trend = "weak";
         m.label = "弱势";
         m.advice = "活跃市值（OAMV）≤ -2.3%，资金大量流出，市场可能进入下行趋势，注意减仓清仓等转暖。";
-      } else if (oamvVal >= 4) {
+      } else if (Number.isFinite(oamvVal) && oamvVal >= 4) {
         m.trend = "strong";
         m.label = "强势";
         m.advice = "活跃市值（OAMV）≥ 4%，资金大量流入，市场可能进入下一主升浪，可积极做 B1。";

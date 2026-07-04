@@ -534,8 +534,8 @@ export function judgeMarket(meta: StockMeta, bars: KlineBar[]): MarketJudgement 
   const bbiAbove = !Number.isNaN(bbiVal) && last.close > bbiVal;
 
   // 活跃市值（OAMV）：管理员手动录入值为准；
-  // 未录入时使用上证综指涨跌幅作为近似。
-  const oamv = change;
+  // 未录入时返回 NaN，前端显示"——"，不做 OAMV 阈值修正。
+  const oamv = NaN;
 
   let trend: MarketJudgement["trend"] = "neutral";
   let label = "震荡";

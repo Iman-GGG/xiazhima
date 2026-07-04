@@ -353,7 +353,7 @@ export default function AdminPage() {
                         {oamvState.oamv.toFixed(2)}%
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">未录入（首页将退回到上证综指涨跌幅近似）</span>
+                      <span className="text-muted-foreground">未录入（首页 OAMV 显示"——"）</span>
                     )}
                   </Row>
                   <Row label="录入时间">

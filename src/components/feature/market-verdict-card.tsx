@@ -28,7 +28,8 @@ export function MarketVerdictCard({ market }: { market: MarketJudgement }) {
   const indexChangeSign = market.indexChange >= 0 ? "+" : "";
   const indexUp = market.indexChange >= 0;
   const slopeUp = market.ma5Slope >= 0;
-  const oamvUp = market.oamv >= 0;
+  const oamvValid = Number.isFinite(market.oamv);
+  const oamvUp = oamvValid && market.oamv >= 0;
   const oamvSign = oamvUp ? "+" : "";
 
   return (
@@ -70,12 +71,14 @@ export function MarketVerdictCard({ market }: { market: MarketJudgement }) {
           />
           <Metric
             label="活跃市值 OAMV"
-            value={`${oamvSign}${market.oamv.toFixed(2)}%`}
-            sub="警戒线≤-2.3%  新升浪≥4%"
+            value={oamvValid ? `${oamvSign}${market.oamv.toFixed(2)}%` : "——"}
+            sub={oamvValid ? "警戒线≤-2.3%  新升浪≥4%" : "待管理员录入"}
             valueTone={
-              oamvUp
-                ? "text-[color:var(--quote-up)]"
-                : "text-[color:var(--quote-down)]"
+              !oamvValid
+                ? "text-muted-foreground"
+                : oamvUp
+                  ? "text-[color:var(--quote-up)]"
+                  : "text-[color:var(--quote-down)]"
             }
           />
           <Metric
