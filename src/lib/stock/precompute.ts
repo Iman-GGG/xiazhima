@@ -108,6 +108,24 @@ function isAfter1505(): boolean {
   return h > 15 || (h === 15 && m >= 5);
 }
 
+/** 判断缓存日期是否仍然有效（允许周末/节假日使用最近交易日的缓存） */
+function isCacheValid(cacheDate: string): boolean {
+  const today = cstDateStr();
+  if (cacheDate === today) return true; // 当天缓存，一定有效
+
+  // 非交易日（周末/节假日）：允许使用过去 1-3 天内的缓存
+  // 交易日但在 15:05 前：也允许使用上一交易日的缓存
+  if (!isWeekday() || !isAfter1505()) {
+    const cacheD = new Date(cacheDate + "T00:00:00+08:00");
+    const todayD = new Date(today + "T00:00:00+08:00");
+    const diffDays = (todayD.getTime() - cacheD.getTime()) / 86400000;
+    return diffDays >= 1 && diffDays <= 3; // 1-3 天前的缓存可用
+  }
+
+  // 交易日 15:05 后但缓存是旧日期 → 调度器应该已更新，若仍未更新则穿透
+  return false;
+}
+
 // ============== 持久化 ==============
 
 function loadFromDisk(): PrecomputeData | null {
@@ -287,14 +305,14 @@ function ensureLoaded(): PrecomputeData | null {
 export function getPrecomputedMarket(): MarketPayload | null {
   const c = ensureLoaded();
   if (!c) return null;
-  if (c.date !== cstDateStr()) return null;
+  if (!isCacheValid(c.date)) return null;
   return c.market;
 }
 
 export function getPrecomputedScreen(scope: ScreenScope): ScreenPayload | null {
   const c = ensureLoaded();
   if (!c) return null;
-  if (c.date !== cstDateStr()) return null;
+  if (!isCacheValid(c.date)) return null;
   return c.screen[scope] ?? null;
 }
 

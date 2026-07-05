@@ -1,7 +1,7 @@
 /**
  * 管理员持久化存储
- * - 开发环境写入 ${COZE_WORKSPACE_PATH}/.runtime/admin-store.json
- * - 生产环境写入 /tmp/admin-store.json（重启 / 重新部署后可能丢失，需要管理员重新填写一次）
+ * - 写入 ${COZE_WORKSPACE_PATH || cwd}/.runtime/admin-store.json
+ * - 不再使用 /tmp，确保重启/重新部署后数据不丢失
  *
  * 存储内容：
  * - oamv: 指南针「活跃市值」百分比（手动录入）
@@ -19,10 +19,11 @@ export interface AdminState {
   oamvDate?: string; // YYYY-MM-DD，标识属于哪一天的录入
 }
 
-const STORE_FILE =
-  process.env.COZE_PROJECT_ENV === "PROD"
-    ? "/tmp/xiazhima-admin-store.json"
-    : join(process.env.COZE_WORKSPACE_PATH || process.cwd(), ".runtime", "admin-store.json");
+const STORE_FILE = join(
+  process.env.COZE_WORKSPACE_PATH || process.cwd(),
+  ".runtime",
+  "admin-store.json",
+);
 
 let cache: AdminState | null = null;
 let cacheAt = 0;
