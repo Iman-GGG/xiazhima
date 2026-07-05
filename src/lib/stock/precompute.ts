@@ -257,7 +257,7 @@ export async function runPrecompute(reason = "manual"): Promise<PrecomputeData |
   running = true;
   const startAt = Date.now();
   try {
-    console.log(`[Precompute] start reason=${reason} at ${new Date().toISOString()}`);
+    console.log(`[Precompute] start host=${hostTag()} reason=${reason} at ${new Date().toISOString()}`);
     const market = await computeMarket();
     const entries = await computeAllStocks();
     const data: PrecomputeData = {
@@ -280,7 +280,7 @@ export async function runPrecompute(reason = "manual"): Promise<PrecomputeData |
       console.warn("[Precompute] skipping save: 0 entries (possible API failure)");
     }
     console.log(
-      `[Precompute] done reason=${reason} duration=${(data.durationMs / 1000).toFixed(1)}s ` +
+      `[Precompute] done host=${hostTag()} reason=${reason} duration=${(data.durationMs / 1000).toFixed(1)}s ` +
         `entries=${entries.length} ` +
         `major.b1=${data.screen.major.summary.b1Count} ` +
         `full.b1=${data.screen.full.summary.b1Count} ` +
@@ -295,10 +295,22 @@ export async function runPrecompute(reason = "manual"): Promise<PrecomputeData |
   }
 }
 
+// ============== 诊断工具 ==============
+
+function hostTag(): string {
+  return process.env.HOSTNAME || process.env.COZE_POD_NAME || process.env.COZE_INSTANCE_ID || "?";
+}
+
 // ============== 读取接口 ==============
 
 function ensureLoaded(): PrecomputeData | null {
+  const hadMem = !!memCache;
   if (!memCache) memCache = loadFromDisk();
+  const hit = !!memCache;
+  const date = memCache?.date ?? "-";
+  console.log(
+    `[Precompute] ensureLoaded host=${hostTag()} memBefore=${hadMem} hit=${hit} date=${date} today=${cstDateStr()}`,
+  );
   return memCache;
 }
 

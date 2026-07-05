@@ -7,6 +7,10 @@ import type { StockAnalysis } from "@/lib/stock/types";
 
 export const dynamic = "force-dynamic";
 
+function hostTag(): string {
+  return process.env.HOSTNAME || process.env.COZE_POD_NAME || process.env.COZE_INSTANCE_ID || "?";
+}
+
 const SCOPES: ScreenScope[] = ["major", "full", "all"];
 
 interface PoolStock {
@@ -80,6 +84,7 @@ export async function GET() {
     // 1) 文件缓存
     const cached = getPrecomputedScreen(scope);
     if (cached) {
+      console.log(`[pool] host=${hostTag()} scope=${scope} source=precompute`);
       const seen = new Set<string>();
       const stocks: PoolStock[] = [];
       const cats = ["b1Ready", "b2Ready", "dz30Ready", "s1Ready"] as const;
@@ -98,15 +103,18 @@ export async function GET() {
     // 2) 内存缓存
     const mem = memCache.get(scope);
     if (mem && Date.now() - mem.at < TTL) {
+      console.log(`[pool] host=${hostTag()} scope=${scope} source=mem-cache`);
       pools[scope] = { stocks: mem.stocks, updatedAt: new Date(mem.at).toISOString() };
       continue;
     }
 
+    console.log(`[pool] host=${hostTag()} scope=${scope} source=live (cache miss)`);
     needCompute.push(scope);
   }
 
   // 3) 串行实时计算缺失的 scope（避免并发过高触发限流）
   for (const scope of needCompute) {
+    console.log(`[pool] host=${hostTag()} scope=${scope} live-computing...`);
     const stocks = await liveCompute(scope);
     pools[scope] = { stocks, updatedAt: new Date().toISOString() };
   }

@@ -16,6 +16,10 @@ function normalizeScope(raw: string | null): ScreenScope {
 
 export const dynamic = "force-dynamic";
 
+function hostTag(): string {
+  return process.env.HOSTNAME || process.env.COZE_POD_NAME || process.env.COZE_INSTANCE_ID || "?";
+}
+
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const scope = normalizeScope(url.searchParams.get("scope"));
@@ -26,6 +30,7 @@ export async function GET(req: NextRequest) {
     if (!force) {
       const precomputed = getPrecomputedScreen(scope);
       if (precomputed) {
+        console.log(`[screen] host=${hostTag()} scope=${scope} source=precompute`);
         return NextResponse.json({ ...precomputed, source: "precompute" });
       }
     }
@@ -34,11 +39,13 @@ export async function GET(req: NextRequest) {
     if (!force) {
       const hit = cache.get(scope);
       if (hit && Date.now() - hit.at < TTL) {
+        console.log(`[screen] host=${hostTag()} scope=${scope} source=mem-cache`);
         return NextResponse.json(hit.data);
       }
     }
 
     // 3) 现场计算
+    console.log(`[screen] host=${hostTag()} scope=${scope} source=live (cache miss, computing...)`);
     const universe = getUniverseByScope(scope);
     const results = await mapWithConcurrency([...universe], 8, async (meta) => {
       try {

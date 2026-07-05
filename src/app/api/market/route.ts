@@ -13,6 +13,10 @@ function buildPayload() {
   return cache?.data;
 }
 
+function hostTag(): string {
+  return process.env.HOSTNAME || process.env.COZE_POD_NAME || process.env.COZE_INSTANCE_ID || "?";
+}
+
 export async function GET() {
   try {
     let payload: ReturnType<typeof buildPayload>;
@@ -20,9 +24,12 @@ export async function GET() {
     const pre = getPrecomputedMarket();
     if (pre) {
       payload = pre;
+      console.log(`[market] host=${hostTag()} source=precompute`);
     } else if (cache && Date.now() - cache.at < TTL) {
       payload = cache.data;
+      console.log(`[market] host=${hostTag()} source=mem-cache`);
     } else {
+      console.log(`[market] host=${hostTag()} source=live (cache miss, fetching...)`);
       const bars = await fetchKline(MARKET_INDEX.code, { count: 60, fq: "" });
       if (bars.length < 30) {
         return NextResponse.json(
