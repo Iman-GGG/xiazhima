@@ -4,6 +4,7 @@ import { fetchKline } from "@/lib/stock/fetcher";
 import { MARKET_INDEX } from "@/lib/stock/universe";
 import { readAdminState } from "@/lib/admin-store";
 import { getPrecomputedMarket } from "@/lib/stock/precompute";
+import { getMarketFromKV, type MarketPayload as KVMarketPayload } from "@/lib/stock/kv-cache";
 
 // 简单内存缓存（5 分钟）
 let cache: { at: number; data: unknown } | null = null;
@@ -20,15 +21,31 @@ function hostTag(): string {
 export async function GET() {
   try {
     let payload: ReturnType<typeof buildPayload>;
-    // 1) 优先用每日 15:05 预计算的快照
-    const pre = getPrecomputedMarket();
-    if (pre) {
-      payload = pre;
-      console.log(`[market] host=${hostTag()} source=precompute`);
-    } else if (cache && Date.now() - cache.at < TTL) {
+
+    // 0) Vercel KV 共享缓存（所有 Serverless 函数可见）
+    const kvMarket = await getMarketFromKV();
+    if (kvMarket) {
+      payload = kvMarket as unknown as ReturnType<typeof buildPayload>;
+      console.log(`[market] host=${hostTag()} source=kv`);
+    }
+
+    // 1) 本地预计算缓存（文件/内存）
+    if (!payload) {
+      const pre = getPrecomputedMarket();
+      if (pre) {
+        payload = pre;
+        console.log(`[market] host=${hostTag()} source=precompute`);
+      }
+    }
+
+    // 2) 进程内存缓存
+    if (!payload && cache && Date.now() - cache.at < TTL) {
       payload = cache.data;
       console.log(`[market] host=${hostTag()} source=mem-cache`);
-    } else {
+    }
+
+    // 3) 实时计算
+    if (!payload) {
       console.log(`[market] host=${hostTag()} source=live (cache miss, fetching...)`);
       const bars = await fetchKline(MARKET_INDEX.code, { count: 60, fq: "" });
       if (bars.length < 30) {

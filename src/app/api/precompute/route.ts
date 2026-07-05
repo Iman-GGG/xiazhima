@@ -16,8 +16,17 @@ export async function POST(req: NextRequest) {
   if (!isAdminRequest(req) && !allowedBySecret) {
     return NextResponse.json({ error: "未登录或未授权" }, { status: 401 });
   }
-  void runPrecompute("admin-manual").catch((e) =>
-    console.warn("[Precompute] admin trigger failed:", e),
-  );
-  return NextResponse.json({ ok: true, message: "已触发后台预计算，约 10-20 分钟完成" });
+  // Vercel Serverless: 必须 await，不能 fire-and-forget
+  // maxDuration 在 vercel.json 中设为 300s，足够跑完全 A 预计算
+  const result = await runPrecompute("admin-manual");
+  if (!result) {
+    return NextResponse.json(
+      { ok: false, error: "预计算失败，请查看日志" },
+      { status: 500 },
+    );
+  }
+  return NextResponse.json({
+    ok: true,
+    message: `预计算完成，耗时 ${(result.durationMs / 1000).toFixed(1)}s，扫描 ${result.screen.all.scanned} 只`,
+  });
 }

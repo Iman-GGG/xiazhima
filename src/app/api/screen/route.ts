@@ -4,6 +4,7 @@ import { fetchKline, fetchSnapshot, mapWithConcurrency } from "@/lib/stock/fetch
 import { getUniverseByScope, type ScreenScope } from "@/lib/stock/universe";
 import type { StockAnalysis } from "@/lib/stock/types";
 import { getPrecomputedScreen } from "@/lib/stock/precompute";
+import { getScreenFromKV, type ScreenPayload as KVScreenPayload } from "@/lib/stock/kv-cache";
 
 // 30 分钟内存缓存（仅在 precompute 缺失时作为兜底）
 const TTL = 30 * 60 * 1000;
@@ -26,7 +27,16 @@ export async function GET(req: NextRequest) {
   const force = url.searchParams.get("force") === "1";
 
   try {
-    // 1) 优先用预计算缓存（每日 15:05 自动刷新）
+    // 0) Vercel KV 共享缓存（所有 Serverless 函数可见）
+    if (!force) {
+      const kvScreen = await getScreenFromKV(scope);
+      if (kvScreen) {
+        console.log(`[screen] host=${hostTag()} scope=${scope} source=kv`);
+        return NextResponse.json({ ...kvScreen, source: "kv" });
+      }
+    }
+
+    // 1) 本地预计算缓存（文件/内存）
     if (!force) {
       const precomputed = getPrecomputedScreen(scope);
       if (precomputed) {
@@ -35,7 +45,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2) 内存缓存
+    // 2) 进程内存缓存
     if (!force) {
       const hit = cache.get(scope);
       if (hit && Date.now() - hit.at < TTL) {

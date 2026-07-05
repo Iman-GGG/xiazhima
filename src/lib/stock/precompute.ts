@@ -18,6 +18,14 @@ import {
   type ScreenScope,
 } from "@/lib/stock/universe";
 import type { StockAnalysis, MarketJudgement, KlineBar } from "@/lib/stock/types";
+import {
+  isKvAvailable,
+  saveMarketToKV,
+  saveScreenToKV,
+  savePoolToKV,
+  saveMetaToKV,
+  type PoolStock,
+} from "@/lib/stock/kv-cache";
 
 const CACHE_DIR = (() => {
   // 生产环境唯一可写目录是 /tmp
@@ -249,6 +257,37 @@ function buildScreenPayload(scope: ScreenScope, entries: RawEntry[]): ScreenPayl
   };
 }
 
+/** 从 ScreenPayload 提取轻量池列表（供 KV 缓存，避免 /api/pool 每次遍历完整 Analysis） */
+function buildPoolFromScreen(
+  screen: ScreenPayload,
+  category: string,
+): PoolStock[] {
+  const seen = new Set<string>();
+  const stocks: PoolStock[] = [];
+  const cats = [
+    ["b1Ready", "b1"],
+    ["b2Ready", "b2"],
+    ["dz30Ready", "dz30"],
+    ["s1Ready", "s1"],
+  ] as const;
+  for (const [arrKey, cat] of cats) {
+    const arr = (screen as unknown as Record<string, unknown>)[arrKey] as StockAnalysis[] | undefined;
+    if (!arr) continue;
+    for (const s of arr) {
+      if (!seen.has(s.code)) {
+        seen.add(s.code);
+        stocks.push({
+          code: s.code,
+          name: s.name,
+          category: cat as PoolStock["category"],
+          change: s.change,
+        });
+      }
+    }
+  }
+  return stocks;
+}
+
 export async function runPrecompute(reason = "manual"): Promise<PrecomputeData | null> {
   if (running) {
     console.log(`[Precompute] skip (already running) reason=${reason}`);
@@ -276,6 +315,36 @@ export async function runPrecompute(reason = "manual"): Promise<PrecomputeData |
     if (entries.length > 0) {
       memCache = data;
       saveToDisk(data);
+
+      // Vercel KV 共享存储（所有 Serverless 函数可见）
+      if (isKvAvailable()) {
+        console.log(`[Precompute] saving to KV...`);
+        const kvStart = Date.now();
+        try {
+          await saveMetaToKV({
+            version: SCHEMA_VERSION,
+            date: data.date,
+            computedAt: data.computedAt,
+            durationMs: data.durationMs,
+          });
+          if (data.market) await saveMarketToKV(data.market);
+          const scopes: ScreenScope[] = ["major", "full", "all"];
+          for (const s of scopes) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await saveScreenToKV(s, data.screen[s] as any);
+          }
+          // 同时保存轻量池数据（供 /api/pool 毫秒级读取）
+          for (const s of scopes) {
+            const pool = buildPoolFromScreen(data.screen[s], s);
+            await savePoolToKV(s, pool);
+          }
+          console.log(
+            `[Precompute] KV save done in ${((Date.now() - kvStart) / 1000).toFixed(1)}s`,
+          );
+        } catch (e) {
+          console.warn("[Precompute] KV save failed (non-fatal):", e);
+        }
+      }
     } else {
       console.warn("[Precompute] skipping save: 0 entries (possible API failure)");
     }

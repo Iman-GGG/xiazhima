@@ -4,6 +4,7 @@ import { analyzeStock } from "@/lib/stock/b1";
 import { fetchKline, fetchSnapshot, mapWithConcurrency } from "@/lib/stock/fetcher";
 import { getUniverseByScope, type ScreenScope } from "@/lib/stock/universe";
 import type { StockAnalysis } from "@/lib/stock/types";
+import { getPoolFromKV, type PoolStock as KVPoolStock } from "@/lib/stock/kv-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +82,14 @@ export async function GET() {
   const needCompute: ScreenScope[] = [];
 
   for (const scope of SCOPES) {
+    // 0) Vercel KV 轻量池缓存（最快，专为 pool API 设计）
+    const kvPool = await getPoolFromKV(scope);
+    if (kvPool && kvPool.length > 0) {
+      console.log(`[pool] host=${hostTag()} scope=${scope} source=kv count=${kvPool.length}`);
+      pools[scope] = { stocks: kvPool as PoolStock[], updatedAt: null };
+      continue;
+    }
+
     // 1) 文件缓存
     const cached = getPrecomputedScreen(scope);
     if (cached) {

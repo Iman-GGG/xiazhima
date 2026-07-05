@@ -164,3 +164,6 @@ Desktop.ini
 .coze-logs
 .codegraph
 .claude/
+
+.vercel
+.env*
