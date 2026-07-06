@@ -68,7 +68,7 @@ export default async function StockDetailPage({ params }: PageProps) {
   return (
     <div className="px-3 sm:px-5 py-2 sm:py-3 space-y-5 max-w-5xl">
       <RememberStock code={lower} />
-      <div className="flex items-center justify-between gap-2">
+      <div className="sticky top-12 z-20 bg-background/95 backdrop-blur flex items-center justify-between gap-2 -mx-3 sm:-mx-5 px-3 sm:px-5 py-2 border-b border-divider">
         <Breadcrumb code={lower} name={analysis?.name} />
         <StockPoolNav />
       </div>
