@@ -27,6 +27,8 @@ interface ChartDatum {
   low: number;
   candleRange: [number, number]; // [low, high]
   isUp: boolean;
+  prevClose: number;
+  changePct: number | null;
   volume: number;
   volumeColor: "up" | "down";
   trendShort: number | null;
@@ -207,6 +209,10 @@ export function PriceChart({
         isUp: b.close >= b.open,
         volume: b.volume,
         volumeColor: b.close >= prevClose ? "up" : "down",
+        prevClose,
+        changePct: idx > 0
+          ? ((b.close - bars[idx - 1].close) / bars[idx - 1].close) * 100
+          : null,
         trendShort: pick(dgx?.trendShort),
         dgeLine: pick(dgx?.dgeLine),
         dif: pick(macd.dif),
@@ -231,6 +237,49 @@ export function PriceChart({
     WebkitBackdropFilter: "blur(3px)",
     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
   } as const;
+
+  // 主图自定义 Tooltip：显示 OHLCV + 涨跌幅 + 大哥线
+  function MainTooltip(props: Record<string, unknown>) {
+    const p = props as {
+      active?: boolean;
+      payload?: Array<{ payload: ChartDatum }>;
+      label?: string;
+    };
+    if (!p.active || !p.payload?.length) return null;
+    const d = p.payload[0]?.payload;
+    if (!d) return null;
+    return (
+      <div style={tooltipBaseStyle} className="px-3 py-2 text-xs font-num">
+        <div className="text-muted-foreground mb-1.5">{p.label}</div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+          <span className="text-muted-foreground">开</span><span>{d.open.toFixed(2)}</span>
+          <span className="text-muted-foreground">高</span><span>{d.high.toFixed(2)}</span>
+          <span className="text-muted-foreground">低</span><span>{d.low.toFixed(2)}</span>
+          <span className="text-muted-foreground">收</span><span>{d.close.toFixed(2)}</span>
+          {d.changePct != null && (
+            <>
+              <span className="text-muted-foreground">涨跌幅</span>
+              <span style={{ color: d.changePct >= 0 ? UP_COLOR : DOWN_COLOR }}>
+                {d.changePct >= 0 ? "+" : ""}{d.changePct.toFixed(2)}%
+              </span>
+            </>
+          )}
+          {d.trendShort != null && (
+            <>
+              <span className="text-muted-foreground">知行短趋</span>
+              <span style={{ color: "#2563eb" }}>{d.trendShort.toFixed(2)}</span>
+            </>
+          )}
+          {d.dgeLine != null && (
+            <>
+              <span className="text-muted-foreground">知行多空线</span>
+              <span style={{ color: "#eab308" }}>{d.dgeLine.toFixed(2)}</span>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="w-full select-none">
@@ -293,26 +342,7 @@ export function PriceChart({
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
             />
-            <Tooltip
-              contentStyle={tooltipBaseStyle}
-              labelStyle={{ color: "var(--muted-foreground)" }}
-              formatter={(value: number | string | (number | string)[], name: string) => {
-                const labels: Record<string, string> = {
-                  candleRange: "区间",
-                  trendShort: "知行短趋",
-                  dgeLine: "知行多空线",
-                };
-                if (Array.isArray(value)) {
-                  const [low, high] = value;
-                  if (typeof low === "number" && typeof high === "number") {
-                    return [`${low.toFixed(2)} ~ ${high.toFixed(2)}`, labels[name] ?? name];
-                  }
-                  return ["—", labels[name] ?? name];
-                }
-                if (typeof value !== "number") return ["—", labels[name] ?? name];
-                return [value.toFixed(2), labels[name] ?? name];
-              }}
-            />
+            <Tooltip content={MainTooltip as never} />
             {/* 蜡烛 */}
             <Bar
               yAxisId="price"
@@ -349,7 +379,12 @@ export function PriceChart({
       </div>
 
       {/* 成交量 */}
-      <div className="px-5 pt-2 text-[11px] text-muted-foreground">成交量（手）</div>
+      <div className="px-5 pt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>成交量（手）</span>
+        {data.length > 0 && (
+          <span className="font-num">{(data[data.length - 1].volume / 10000).toFixed(2)} 万手</span>
+        )}
+      </div>
       <div className="h-16 sm:h-20 px-2">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} syncId="xzm-price-sync" margin={subMargin}>
@@ -393,6 +428,16 @@ export function PriceChart({
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 bg-[var(--quote-up)]" /> MACD
           </span>
+          {data.length > 0 && (() => {
+            const d = data[data.length - 1];
+            return (
+              <span className="font-num">
+                {d.dif != null ? d.dif.toFixed(3) : "—"}{" "}
+                {d.dea != null ? d.dea.toFixed(3) : "—"}{" "}
+                {d.macd != null ? d.macd.toFixed(3) : "—"}
+              </span>
+            );
+          })()}
         </div>
       </div>
       <div className="h-16 sm:h-24 px-2">
@@ -457,6 +502,16 @@ export function PriceChart({
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#c026d3]" /> J
           </span>
+          {data.length > 0 && (() => {
+            const d = data[data.length - 1];
+            return (
+              <span className="font-num">
+                {d.k != null ? d.k.toFixed(2) : "—"}{" "}
+                {d.d != null ? d.d.toFixed(2) : "—"}{" "}
+                {d.j != null ? d.j.toFixed(2) : "—"}
+              </span>
+            );
+          })()}
         </div>
       </div>
       <div className="h-16 sm:h-24 px-2">
@@ -505,6 +560,15 @@ export function PriceChart({
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[var(--quote-up)]" /> 长期
           </span>
+          {data.length > 0 && (() => {
+            const d = data[data.length - 1];
+            return (
+              <span className="font-num">
+                {d.dzShort != null ? d.dzShort.toFixed(1) : "—"}{" "}
+                {d.dzLong != null ? d.dzLong.toFixed(1) : "—"}
+              </span>
+            );
+          })()}
         </div>
       </div>
       <div className="h-20 sm:h-28 px-2">
