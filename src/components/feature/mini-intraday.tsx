@@ -35,8 +35,8 @@ export function MiniIntraday({
   low: number;
   prevClose: number;
 }) {
-  const w = 80;
-  const h = 30;
+  const w = 64;
+  const h = 24;
   const isUp = close >= prevClose;
   const color = isUp ? "var(--quote-up)" : "var(--quote-down)";
 
