@@ -47,7 +47,7 @@ function synthPoints(o: number, h: number, l: number, c: number, n = 9): number[
 
 // ---- SVG 渲染 ----
 
-function renderSvg(points: number[], color: string, w = 64, h = 24) {
+function MiniChartSvg({ points, color, w = 64, h = 24 }: { points: number[]; color: string; w?: number; h?: number }) {
   const maxP = Math.max(...points);
   const minP = Math.min(...points);
   const range = maxP - minP || 1;
@@ -94,7 +94,7 @@ export function MiniIntraday({
   // 1) 有真分时数据 → 用真实分钟线渲染
   if (minuteBars && minuteBars.length > 0) {
     const realPoints = minuteBars.map((b) => b.close);
-    return renderSvg(realPoints, color);
+    return <MiniChartSvg points={realPoints} color={color} />;
   }
 
   // 2) 交易日 9:30 后缓存为旧日期 → 占位提示
@@ -108,5 +108,5 @@ export function MiniIntraday({
 
   // 3) 降级：用 OHLC 模拟折线
   const pts = synthPoints(open, high, low, close, 9);
-  return renderSvg(pts, color);
+  return <MiniChartSvg points={pts} color={color} />;
 }

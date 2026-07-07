@@ -11,14 +11,7 @@ export interface FetchOptions {
 interface TencentKlineResp {
   code: number;
   msg?: string;
-  data?: Record<
-    string,
-    {
-      qfqday?: unknown[][];
-      day?: unknown[][];
-      hfqday?: unknown[][];
-    }
-  >;
+  data?: Record<string, Record<string, unknown[][] | undefined>>;
 }
 
 /** 拉取一只股票的最近若干根日 K */
@@ -91,7 +84,7 @@ export async function fetchMinuteKline(code: string, count = 24): Promise<Minute
   if (json.code !== 0 || !json.data) return [];
   const symbolData = json.data[code];
   if (!symbolData) return [];
-  const arr = (symbolData as Record<string, unknown[][]>).m10 ?? [];
+  const arr = symbolData.m10 ?? [];
   return arr.map((row) => {
     const r = row as (string | number)[];
     return {
