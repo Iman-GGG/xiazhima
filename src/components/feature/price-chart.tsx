@@ -137,6 +137,7 @@ export function PriceChart({
 
   const [viewSize, setViewSize] = useState(DEFAULT_WINDOW);
   const [viewEnd, setViewEnd] = useState(bars.length);
+  const [hoveredDatum, setHoveredDatum] = useState<ChartDatum | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // bars 数据更新时重置视图
@@ -158,6 +159,17 @@ export function PriceChart({
     },
     [bars.length],
   );
+
+  const handleMainMouseMove = useCallback((e: unknown) => {
+    const evt = e as { activePayload?: Array<{ payload: ChartDatum }> };
+    if (evt?.activePayload?.[0]?.payload) {
+      setHoveredDatum(evt.activePayload[0].payload);
+    }
+  }, []);
+
+  const handleMainMouseLeave = useCallback(() => {
+    setHoveredDatum(null);
+  }, []);
 
   // 鼠标滚轮：纵向（或不带 Shift）= 缩放；横向（或 Shift+ 纵向）= 平移
   useEffect(() => {
@@ -238,48 +250,12 @@ export function PriceChart({
     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
   } as const;
 
-  // 主图自定义 Tooltip：显示 OHLCV + 涨跌幅 + 大哥线
-  function MainTooltip(props: Record<string, unknown>) {
-    const p = props as {
-      active?: boolean;
-      payload?: Array<{ payload: ChartDatum }>;
-      label?: string;
-    };
-    if (!p.active || !p.payload?.length) return null;
-    const d = p.payload[0]?.payload;
-    if (!d) return null;
-    return (
-      <div style={tooltipBaseStyle} className="px-3 py-2 text-xs font-num">
-        <div className="text-muted-foreground mb-1.5">{p.label}</div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-          <span className="text-muted-foreground">开</span><span>{d.open.toFixed(2)}</span>
-          <span className="text-muted-foreground">高</span><span>{d.high.toFixed(2)}</span>
-          <span className="text-muted-foreground">低</span><span>{d.low.toFixed(2)}</span>
-          <span className="text-muted-foreground">收</span><span>{d.close.toFixed(2)}</span>
-          {d.changePct != null && (
-            <>
-              <span className="text-muted-foreground">涨跌幅</span>
-              <span style={{ color: d.changePct >= 0 ? UP_COLOR : DOWN_COLOR }}>
-                {d.changePct >= 0 ? "+" : ""}{d.changePct.toFixed(2)}%
-              </span>
-            </>
-          )}
-          {d.trendShort != null && (
-            <>
-              <span className="text-muted-foreground">知行短趋</span>
-              <span style={{ color: "#2563eb" }}>{d.trendShort.toFixed(2)}</span>
-            </>
-          )}
-          {d.dgeLine != null && (
-            <>
-              <span className="text-muted-foreground">知行多空线</span>
-              <span style={{ color: "#eab308" }}>{d.dgeLine.toFixed(2)}</span>
-            </>
-          )}
-        </div>
-      </div>
-    );
+  // 隐身 Tooltip：仅维持十字光标同步，不渲染浮层；数值显示在附图标题行
+  function SyncTooltip() {
+    return null;
   }
+
+  const displayDatum = hoveredDatum ?? (data.length > 0 ? data[data.length - 1] : null);
 
   return (
     <div ref={containerRef} className="w-full select-none">
@@ -326,7 +302,10 @@ export function PriceChart({
       </div>
       <div className="h-48 sm:h-64 px-2">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} syncId="xzm-price-sync" margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+          <ComposedChart data={data} syncId="xzm-price-sync" margin={{ top: 8, right: 8, bottom: 0, left: -16 }}
+            onMouseMove={handleMainMouseMove}
+            onMouseLeave={handleMainMouseLeave}
+          >
             <XAxis
               dataKey="date"
               tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
@@ -342,7 +321,7 @@ export function PriceChart({
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
             />
-            <Tooltip content={MainTooltip as never} />
+            <Tooltip content={SyncTooltip as never} />
             {/* 蜡烛 */}
             <Bar
               yAxisId="price"
@@ -381,8 +360,8 @@ export function PriceChart({
       {/* 成交量 */}
       <div className="px-5 pt-2 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>成交量（手）</span>
-        {data.length > 0 && (
-          <span className="font-num">{(data[data.length - 1].volume / 10000).toFixed(2)} 万手</span>
+        {displayDatum && (
+          <span className="font-num">{(displayDatum.volume / 10000).toFixed(2)} 万手</span>
         )}
       </div>
       <div className="h-16 sm:h-20 px-2">
@@ -421,23 +400,16 @@ export function PriceChart({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#2563eb]" /> DIF
+            <span className="font-num">{displayDatum?.dif != null ? displayDatum.dif.toFixed(3) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#eab308]" /> DEA
+            <span className="font-num">{displayDatum?.dea != null ? displayDatum.dea.toFixed(3) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 bg-[var(--quote-up)]" /> MACD
+            <span className="font-num">{displayDatum?.macd != null ? displayDatum.macd.toFixed(3) : "—"}</span>
           </span>
-          {data.length > 0 && (() => {
-            const d = data[data.length - 1];
-            return (
-              <span className="font-num">
-                {d.dif != null ? d.dif.toFixed(3) : "—"}{" "}
-                {d.dea != null ? d.dea.toFixed(3) : "—"}{" "}
-                {d.macd != null ? d.macd.toFixed(3) : "—"}
-              </span>
-            );
-          })()}
         </div>
       </div>
       <div className="h-16 sm:h-24 px-2">
@@ -495,23 +467,16 @@ export function PriceChart({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#2563eb]" /> K
+            <span className="font-num">{displayDatum?.k != null ? displayDatum.k.toFixed(2) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#eab308]" /> D
+            <span className="font-num">{displayDatum?.d != null ? displayDatum.d.toFixed(2) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#c026d3]" /> J
+            <span className="font-num">{displayDatum?.j != null ? displayDatum.j.toFixed(2) : "—"}</span>
           </span>
-          {data.length > 0 && (() => {
-            const d = data[data.length - 1];
-            return (
-              <span className="font-num">
-                {d.k != null ? d.k.toFixed(2) : "—"}{" "}
-                {d.d != null ? d.d.toFixed(2) : "—"}{" "}
-                {d.j != null ? d.j.toFixed(2) : "—"}
-              </span>
-            );
-          })()}
         </div>
       </div>
       <div className="h-16 sm:h-24 px-2">
@@ -556,19 +521,12 @@ export function PriceChart({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-foreground" /> 短期
+            <span className="font-num">{displayDatum?.dzShort != null ? displayDatum.dzShort.toFixed(1) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[var(--quote-up)]" /> 长期
+            <span className="font-num">{displayDatum?.dzLong != null ? displayDatum.dzLong.toFixed(1) : "—"}</span>
           </span>
-          {data.length > 0 && (() => {
-            const d = data[data.length - 1];
-            return (
-              <span className="font-num">
-                {d.dzShort != null ? d.dzShort.toFixed(1) : "—"}{" "}
-                {d.dzLong != null ? d.dzLong.toFixed(1) : "—"}
-              </span>
-            );
-          })()}
         </div>
       </div>
       <div className="h-20 sm:h-28 px-2">
