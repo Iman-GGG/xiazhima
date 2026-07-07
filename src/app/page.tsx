@@ -8,6 +8,7 @@ import type { MarketJudgement, StockAnalysis } from "@/lib/stock/types";
 
 interface ScreenPayload {
   updatedAt: string;
+  tradingDate?: string;
   scope: "major" | "full" | "all";
   scanned: number;
   total: number;
@@ -164,7 +165,7 @@ export default function HomePage() {
         {loading && !screen ? (
           <SkeletonTable />
         ) : screen ? (
-          <ScreenTable rows={screen.b1Ready} empty="本范围内今日无 B1 命中，按战法规则建议观望。" />
+          <ScreenTable rows={screen.b1Ready} empty="本范围内今日无 B1 命中，按战法规则建议观望。" tradingDate={screen.tradingDate} />
         ) : (
           <ErrorBox title="选股池构建失败" detail={error ?? "行情接口异常，请稍后刷新页面重试。"} />
         )}
@@ -192,6 +193,7 @@ export default function HomePage() {
             rows={screen.b2Ready}
             empty="本范围内今日无 B2 命中，等趋势拐头放量再战。"
             highlight="b2"
+            tradingDate={screen.tradingDate}
           />
         ) : (
           <ErrorBox title="选股池构建失败" detail={error ?? "行情接口异常，请稍后刷新页面重试。"} />
@@ -220,6 +222,7 @@ export default function HomePage() {
             rows={screen.dz30Ready}
             empty="本范围内今日无单针下三十命中。"
             highlight="dz30"
+            tradingDate={screen.tradingDate}
           />
         ) : (
           <ErrorBox title="选股池构建失败" detail={error ?? "行情接口异常，请稍后刷新页面重试。"} />
@@ -248,6 +251,7 @@ export default function HomePage() {
             rows={screen.s1Ready}
             empty="本范围内今日无 S1 命中，无须主动减仓。"
             highlight="s1"
+            tradingDate={screen.tradingDate}
           />
         ) : (
           <ErrorBox title="选股池构建失败" detail={error ?? "行情接口异常，请稍后刷新页面重试。"} />

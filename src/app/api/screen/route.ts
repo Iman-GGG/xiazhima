@@ -85,6 +85,7 @@ export async function GET(req: NextRequest) {
 
     const payload = {
       updatedAt: new Date().toISOString(),
+      tradingDate: "", // live compute 无分时数据，由缓存层提供
       scope,
       scanned: universe.length,
       total: all.length,

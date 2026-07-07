@@ -1,54 +1,59 @@
-/** 根据 OHLC 生成模拟分时折线点（不超出 high/low 范围） */
+import type { MinuteBar } from "@/lib/stock/types";
+
+// ---- 休市后更新判断 ----
+
+function cstNow(): Date {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000);
+}
+
+function isWeekday(): boolean {
+  const day = cstNow().getUTCDay();
+  return day >= 1 && day <= 5;
+}
+
+function isAfter0930(): boolean {
+  const d = cstNow();
+  const h = d.getUTCHours();
+  const m = d.getUTCMinutes();
+  return h > 9 || (h === 9 && m >= 30);
+}
+
+function shouldShowPlaceholder(tradingDate?: string): boolean {
+  if (!tradingDate) return false;
+  if (!isWeekday() || !isAfter0930()) return false;
+  const today = cstNow().toISOString().slice(0, 10);
+  return tradingDate < today;
+}
+
+// ---- 模拟分时折线（无真分时数据时的降级方案） ----
+
 function synthPoints(o: number, h: number, l: number, c: number, n = 9): number[] {
   const pts: number[] = [];
   for (let i = 0; i < n; i++) {
     const t = i / (n - 1);
     let base: number;
     if (t < 0.4) {
-      // 前半段：开盘 → 靠近高点
       base = o + (h - o) * (t / 0.4);
     } else if (t < 0.7) {
-      // 中段：高点附近回落到低点
       base = h + (l - h) * ((t - 0.4) / 0.3);
     } else {
-      // 尾段：低点附近回到收盘
       base = l + (c - l) * ((t - 0.7) / 0.3);
     }
-    // 轻微正弦抖动模拟真实波动
     const wiggle = Math.sin(t * Math.PI * 5) * (h - l) * 0.03;
     pts.push(Math.max(l, Math.min(h, base + wiggle)));
   }
   return pts;
 }
 
-/** 轻量化迷你分时缩略图：面积填充 + 折线，红涨绿跌 */
-export function MiniIntraday({
-  open,
-  close,
-  high,
-  low,
-  prevClose,
-}: {
-  open: number;
-  close: number;
-  high: number;
-  low: number;
-  prevClose: number;
-}) {
-  const w = 64;
-  const h = 24;
-  const isUp = close >= prevClose;
-  const color = isUp ? "var(--quote-up)" : "var(--quote-down)";
+// ---- SVG 渲染 ----
 
-  const pts = synthPoints(open, high, low, close, 9);
-  const maxP = Math.max(...pts);
-  const minP = Math.min(...pts);
+function renderSvg(points: number[], color: string, w = 64, h = 24) {
+  const maxP = Math.max(...points);
+  const minP = Math.min(...points);
   const range = maxP - minP || 1;
-
-  const toX = (i: number) => (i / (pts.length - 1)) * w;
+  const toX = (i: number) => (i / (points.length - 1)) * w;
   const toY = (v: number) => ((maxP - v) / range) * h;
-
-  const lineD = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${toX(i)},${toY(p)}`).join(" ");
+  const lineD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${toX(i)},${toY(p)}`).join(" ");
   const areaD = `${lineD} L ${w},${h} L 0,${h} Z`;
 
   return (
@@ -57,17 +62,51 @@ export function MiniIntraday({
       height={h}
       viewBox={`0 0 ${w} ${h}`}
       className="inline-block align-middle"
-      aria-label={`${isUp ? "收涨" : "收跌"}，开${open} 收${close} 高${high} 低${low}`}
     >
       <path d={areaD} fill={color} fillOpacity={0.12} />
-      <path
-        d={lineD}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.2}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
+      <path d={lineD} fill="none" stroke={color} strokeWidth={1.2} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
+}
+
+// ---- 组件入口 ----
+
+export function MiniIntraday({
+  open,
+  close,
+  high,
+  low,
+  prevClose,
+  minuteBars,
+  tradingDate,
+}: {
+  open: number;
+  close: number;
+  high: number;
+  low: number;
+  prevClose: number;
+  minuteBars?: MinuteBar[];
+  tradingDate?: string;
+}) {
+  const isUp = close >= prevClose;
+  const color = isUp ? "var(--quote-up)" : "var(--quote-down)";
+
+  // 1) 有真分时数据 → 用真实分钟线渲染
+  if (minuteBars && minuteBars.length > 0) {
+    const realPoints = minuteBars.map((b) => b.close);
+    return renderSvg(realPoints, color);
+  }
+
+  // 2) 交易日 9:30 后缓存为旧日期 → 占位提示
+  if (shouldShowPlaceholder(tradingDate)) {
+    return (
+      <span className="text-[10px] text-muted-foreground leading-tight inline-block align-middle whitespace-nowrap">
+        休市后<br />更新
+      </span>
+    );
+  }
+
+  // 3) 降级：用 OHLC 模拟折线
+  const pts = synthPoints(open, high, low, close, 9);
+  return renderSvg(pts, color);
 }

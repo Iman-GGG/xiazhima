@@ -7,11 +7,13 @@ export function ScreenTable({
   rows,
   empty,
   highlight = "b1",
+  tradingDate,
 }: {
   rows: StockAnalysis[];
   empty?: string;
   /** 高亮哪一类裁定：b1 / b2 / s1 / dz30 */
   highlight?: "b1" | "b2" | "s1" | "dz30";
+  tradingDate?: string;
 }) {
   if (!rows || rows.length === 0) {
     return (
@@ -118,6 +120,8 @@ export function ScreenTable({
                         high={last.high}
                         low={last.low}
                         prevClose={r.prevClose}
+                        minuteBars={r.minuteBars}
+                        tradingDate={tradingDate}
                       />
                     );
                   })()}

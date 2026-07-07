@@ -8,6 +8,12 @@ export interface KlineBar {
   volume: number; // 成交量，单位：手（1手=100股）
 }
 
+/** 日内分钟 K 线（m10），用于迷你分时缩略图 */
+export interface MinuteBar {
+  time: string;   // HH:mm
+  close: number;
+}
+
 export interface StockMeta {
   code: string; // 形如 sh600519 / sz000001 / bj430047
   name: string;
@@ -92,6 +98,8 @@ export interface StockAnalysis extends StockSnapshot {
   trend: "long" | "short"; // 多头/空头大趋势
   signal: TradeSignal; // 主信号
   recentBars: KlineBar[]; // 最近若干根 K 线，用于前端展示
+  /** 最近一个交易日 10 分钟级分时数据（预计算缓存专属；实时计算时为 undefined） */
+  minuteBars?: MinuteBar[];
 }
 
 export type MarketTrend = "strong" | "neutral" | "weak";

@@ -1,4 +1,4 @@
-import type { KlineBar, StockMeta } from "./types";
+import type { KlineBar, MinuteBar, StockMeta } from "./types";
 
 // 腾讯财经历史 K 线接口
 // https://ifzq.gtimg.cn/appstock/app/fqkline/get?param=sh600519,day,,,90,qfq
@@ -61,6 +61,42 @@ export async function fetchKline(code: string, opts: FetchOptions = {}): Promise
       high: Number(r[3]),
       low: Number(r[4]),
       volume: Number(r[5]),
+    };
+  });
+}
+
+/** 拉取 10 分钟级 K 线（用于迷你分时图），默认 24 根覆盖全天 */
+export async function fetchMinuteKline(code: string, count = 24): Promise<MinuteBar[]> {
+  const url = `https://ifzq.gtimg.cn/appstock/app/fqkline/get?param=${encodeURIComponent(
+    code,
+  )},m10,,,${count},qfq`;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 6000);
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+        Referer: "https://gu.qq.com/",
+      },
+      cache: "no-store",
+      signal: ctrl.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) throw new Error(`fetchMinuteKline ${code} HTTP ${res.status}`);
+  const json = (await res.json()) as TencentKlineResp;
+  if (json.code !== 0 || !json.data) return [];
+  const symbolData = json.data[code];
+  if (!symbolData) return [];
+  const arr = (symbolData as Record<string, unknown[][]>).m10 ?? [];
+  return arr.map((row) => {
+    const r = row as (string | number)[];
+    return {
+      time: String(r[0]).slice(-5), // "2026-07-07 09:30" → "09:30"
+      close: Number(r[2]),
     };
   });
 }

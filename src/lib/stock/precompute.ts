@@ -11,13 +11,13 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { analyzeStock, judgeMarket } from "@/lib/stock/b1";
-import { fetchKline, fetchSnapshot, mapWithConcurrency } from "@/lib/stock/fetcher";
+import { fetchKline, fetchMinuteKline, fetchSnapshot, mapWithConcurrency } from "@/lib/stock/fetcher";
 import {
   MARKET_INDEX,
   getUniverseByScope,
   type ScreenScope,
 } from "@/lib/stock/universe";
-import type { StockAnalysis, MarketJudgement, KlineBar } from "@/lib/stock/types";
+import type { StockAnalysis, MarketJudgement, KlineBar, MinuteBar } from "@/lib/stock/types";
 import {
   isKvAvailable,
   saveMarketToKV,
@@ -42,6 +42,7 @@ interface MarketPayload {
 
 interface ScreenPayload {
   updatedAt: string;
+  tradingDate: string; // 最近有效交易日 YYYY-MM-DD（分时数据所属日期）
   scope: ScreenScope;
   scanned: number;
   total: number;
@@ -80,8 +81,8 @@ interface PrecomputeData {
   screen: Record<ScreenScope, ScreenPayload>;
 }
 
-/** schema 版本：2 = 加 dz30Ready；3 = 删 B1 极致缩量条件 */
-const SCHEMA_VERSION = 8;
+/** schema 版本：8 = 单针 99.99 阈值；9 = StockAnalysis 增加 minuteBars 分时字段 */
+const SCHEMA_VERSION = 9;
 
 let memCache: PrecomputeData | null = null;
 let running = false;
@@ -199,9 +200,10 @@ async function computeAllStocks(): Promise<RawEntry[]> {
   runProgress = { scanned: 0, total: allUni.length, startedAt: new Date().toISOString() };
   const results = await mapWithConcurrency([...allUni], 8, async (meta) => {
     try {
-      const [bars, snapshot] = await Promise.all([
+      const [bars, snapshot, minuteBars] = await Promise.all([
         fetchKline(meta.code, { count: 200 }).catch(() => []),
         fetchSnapshot(meta.code).catch(() => null),
+        fetchMinuteKline(meta.code, 24).catch(() => [] as MinuteBar[]),
       ]);
       if (!bars || bars.length < 30) return null;
       const marketCap = snapshot?.marketCap ?? meta.marketCap ?? 0;
@@ -209,6 +211,9 @@ async function computeAllStocks(): Promise<RawEntry[]> {
       const realName = snapshot?.name ?? meta.name;
       const analysis = analyzeStock({ code: meta.code, name: realName }, bars, marketCap, totalCap);
       if (!analysis) return null;
+      if (minuteBars.length > 0) {
+        analysis.minuteBars = minuteBars;
+      }
       return { code: meta.code, marketCap, analysis } satisfies RawEntry;
     } catch {
       return null;
@@ -219,7 +224,7 @@ async function computeAllStocks(): Promise<RawEntry[]> {
   return results.filter((r): r is RawEntry => r !== null);
 }
 
-function buildScreenPayload(scope: ScreenScope, entries: RawEntry[]): ScreenPayload {
+function buildScreenPayload(scope: ScreenScope, entries: RawEntry[], tradingDate: string): ScreenPayload {
   const min = scope === "major" ? 200 : scope === "full" ? 50 : 0;
   const subset = entries.filter((r) => (r.marketCap ?? 0) >= min);
   const all = subset.map((s) => s.analysis);
@@ -233,6 +238,7 @@ function buildScreenPayload(scope: ScreenScope, entries: RawEntry[]): ScreenPayl
   const takeProfit = all.filter((r) => r.signal.type === "take-profit");
   return {
     updatedAt: new Date().toISOString(),
+    tradingDate,
     scope,
     scanned: getUniverseByScope(scope).length,
     total: all.length,
@@ -306,9 +312,9 @@ export async function runPrecompute(reason = "manual"): Promise<PrecomputeData |
       durationMs: Date.now() - startAt,
       market,
       screen: {
-        major: buildScreenPayload("major", entries),
-        full: buildScreenPayload("full", entries),
-        all: buildScreenPayload("all", entries),
+        major: buildScreenPayload("major", entries, data.date),
+        full: buildScreenPayload("full", entries, data.date),
+        all: buildScreenPayload("all", entries, data.date),
       },
     };
     // 若全 A 扫描无结果（API 故障等），不落盘，避免覆盖上一次成功缓存

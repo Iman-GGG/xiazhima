@@ -95,6 +95,7 @@ export interface PoolStock {
 
 export interface ScreenPayload {
   updatedAt: string;
+  tradingDate?: string;
   scope: string;
   scanned: number;
   total: number;
