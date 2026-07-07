@@ -26,7 +26,7 @@ export function ScreenTable({
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-divider">
             <th className="pl-4 pr-2 py-2.5 w-[60px]">裁定</th>
-            <th className="px-2 py-2.5">标的</th>
+            <th className="px-2 py-2.5 w-[60px]">标的</th>
             <th className="px-2 py-2.5 w-[80px]">分时</th>
             <th className="px-2 py-2.5 w-[64px] text-right">最新价</th>
             <th className="px-2 py-2.5 w-[68px] text-right">涨跌幅</th>
