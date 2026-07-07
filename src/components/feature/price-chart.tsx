@@ -381,6 +381,7 @@ export function PriceChart({
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
             />
+            <Tooltip content={() => null} cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.3, strokeWidth: 1 }} />
             <Bar dataKey="volume" isAnimationActive={false} shape={VolumeShape as never} />
           </ComposedChart>
         </ResponsiveContainer>
@@ -420,6 +421,7 @@ export function PriceChart({
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
             />
+            <Tooltip content={() => null} cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.3, strokeWidth: 1 }} />
             <ReferenceLine y={0} stroke="var(--divider)" strokeWidth={1} />
             <Bar dataKey="macd" isAnimationActive={false} shape={MacdShape as never} />
             <Line
@@ -480,6 +482,7 @@ export function PriceChart({
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
             />
+            <Tooltip content={() => null} cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.3, strokeWidth: 1 }} />
             <ReferenceLine y={20} stroke="var(--divider)" strokeDasharray="2 4" />
             <ReferenceLine y={80} stroke="var(--divider)" strokeDasharray="2 4" />
             <Line type="monotone" dataKey="k" stroke="#2563eb" strokeWidth={1.4} dot={false} isAnimationActive={false} connectNulls />
@@ -521,6 +524,7 @@ export function PriceChart({
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
             />
+            <Tooltip content={() => null} cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.3, strokeWidth: 1 }} />
             {/* 85 / 30 黄色实线水平参考 */}
             <ReferenceLine y={85} stroke="#eab308" strokeWidth={1.2} />
             <ReferenceLine y={30} stroke="#eab308" strokeWidth={1.2} />
