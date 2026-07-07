@@ -359,7 +359,7 @@ export function PriceChart({
       </div>
 
       {/* 成交量 */}
-      <div className="px-5 pt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="px-5 pt-2 flex items-center gap-x-3 text-[11px] text-muted-foreground">
         <span>成交量（手）</span>
         {displayDatum && (
           <span className="font-num">{(displayDatum.volume / 10000).toFixed(2)} 万手</span>
@@ -388,7 +388,7 @@ export function PriceChart({
       </div>
 
       {/* MACD */}
-      <div className="px-5 pt-3 pb-1 flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="px-5 pt-3 pb-1 flex items-center gap-x-4 text-[11px] text-muted-foreground">
         <span>MACD (12, 26, 9)</span>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
@@ -447,7 +447,7 @@ export function PriceChart({
       </div>
 
       {/* KDJ */}
-      <div className="px-5 pt-3 pb-1 flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="px-5 pt-3 pb-1 flex items-center gap-x-4 text-[11px] text-muted-foreground">
         <span>KDJ (9, 3, 3)</span>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
@@ -493,7 +493,7 @@ export function PriceChart({
       </div>
 
       {/* 单针下三十 */}
-      <div className="px-5 pt-3 pb-1 flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="px-5 pt-3 pb-1 flex items-center gap-x-4 text-[11px] text-muted-foreground">
         <span>单针下三十 (3, 21)</span>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="flex items-center gap-1">
