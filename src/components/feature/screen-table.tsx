@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { StockAnalysis } from "@/lib/stock/types";
 import { cn } from "@/lib/utils";
+import { MiniIntraday } from "./mini-intraday";
 
 export function ScreenTable({
   rows,
@@ -24,13 +25,14 @@ export function ScreenTable({
       <table className="w-full min-w-[720px] text-sm">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-divider">
-            <th className="px-5 py-2.5 w-[140px]">裁定</th>
-            <th className="px-5 py-2.5">标的</th>
-            <th className="px-5 py-2.5 text-right">最新价</th>
-            <th className="px-5 py-2.5 text-right">涨跌幅</th>
-            <th className="px-5 py-2.5 text-right hidden sm:table-cell">KDJ-J</th>
-            <th className="px-5 py-2.5 text-right hidden sm:table-cell">BBI</th>
-            <th className="px-5 py-2.5 hidden sm:table-cell">趋势</th>
+            <th className="px-3 py-2.5 w-[72px]">裁定</th>
+            <th className="px-3 py-2.5">标的</th>
+            <th className="px-3 py-2.5 w-[68px]">分时</th>
+            <th className="px-3 py-2.5 text-right">最新价</th>
+            <th className="px-3 py-2.5 text-right">涨跌幅</th>
+            <th className="px-3 py-2.5 text-right hidden sm:table-cell">KDJ-J</th>
+            <th className="px-3 py-2.5 text-right hidden sm:table-cell">BBI</th>
+            <th className="px-3 py-2.5 hidden sm:table-cell">趋势</th>
           </tr>
         </thead>
         <tbody>
@@ -57,29 +59,29 @@ export function ScreenTable({
                       ? "dot-up"
                       : "dot-wait";
             const verdictLabel = showS1
-              ? "S1 顶部减仓"
+              ? "S1"
               : showDz30
-                ? "补票入场"
+                ? "单针"
                 : showB2
-                  ? "B2入场"
+                  ? "B2"
                   : showB1
-                    ? "B1入场"
+                    ? "B1"
                     : r.signal.type === "clear"
-                      ? "清仓离场"
+                      ? "清仓"
                       : r.signal.type === "stop-loss"
-                        ? "严格止损"
+                        ? "止损"
                         : r.signal.type === "take-profit"
-                          ? "减半仓止盈"
+                          ? "止盈"
                           : isB1Ready
-                            ? "B1入场"
-                            : "不入场";
+                            ? "B1"
+                            : "观望";
             return (
               <tr
                 key={r.code}
                 className="border-b border-divider hover:bg-muted/60 transition-colors"
               >
-                <td className="px-5 py-3">
-                  <span className="inline-flex items-center gap-2 text-[12.5px]">
+                <td className="px-3 py-3">
+                  <span className="inline-flex items-center gap-1.5 text-[12px]">
                     <span className={cn("dot", dotClass)} />
                     <span
                       className={cn(
@@ -94,7 +96,7 @@ export function ScreenTable({
                     </span>
                   </span>
                 </td>
-                <td className="px-5 py-3">
+                <td className="px-3 py-3">
                   <Link
                     href={`/stock/${r.code}`}
                     className="block hover:opacity-70 transition-opacity"
@@ -105,10 +107,25 @@ export function ScreenTable({
                     </div>
                   </Link>
                 </td>
-                <td className="px-5 py-3 text-right font-num">{r.price.toFixed(2)}</td>
+                <td className="px-1 py-3">
+                  {(() => {
+                    const last = r.recentBars?.[r.recentBars.length - 1];
+                    if (!last) return <span className="text-muted-foreground text-[11px]">—</span>;
+                    return (
+                      <MiniIntraday
+                        open={last.open}
+                        close={last.close}
+                        high={last.high}
+                        low={last.low}
+                        prevClose={r.prevClose}
+                      />
+                    );
+                  })()}
+                </td>
+                <td className="px-3 py-3 text-right font-num">{r.price.toFixed(2)}</td>
                 <td
                   className={cn(
-                    "px-5 py-3 text-right font-num",
+                    "px-3 py-3 text-right font-num",
                     change >= 0 ? "text-foreground font-medium" : "text-muted-foreground",
                   )}
                 >
@@ -117,7 +134,7 @@ export function ScreenTable({
                 </td>
                 <td
                   className={cn(
-                    "px-5 py-3 text-right font-num hidden sm:table-cell",
+                    "px-3 py-3 text-right font-num hidden sm:table-cell",
                     r.kdjJ < 0
                       ? "text-[color:var(--signal-pass)] font-medium"
                       : "text-muted-foreground",
@@ -125,10 +142,10 @@ export function ScreenTable({
                 >
                   {Number.isFinite(r.kdjJ) ? r.kdjJ.toFixed(1) : "—"}
                 </td>
-                <td className="px-5 py-3 text-right font-num text-muted-foreground hidden sm:table-cell">
+                <td className="px-3 py-3 text-right font-num text-muted-foreground hidden sm:table-cell">
                   {Number.isFinite(r.bbi) ? r.bbi.toFixed(2) : "—"}
                 </td>
-                <td className="px-5 py-3 hidden sm:table-cell">
+                <td className="px-3 py-3 hidden sm:table-cell">
                   <span
                     className={cn(
                       "px-1.5 py-0.5 text-[11px] border",
