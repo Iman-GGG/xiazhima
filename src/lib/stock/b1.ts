@@ -380,7 +380,7 @@ export function detectSignal(bars: KlineBar[], b1: B1Check, s1?: S1Check): Trade
     return {
       type: "warn",
       label: "B1 买点就绪",
-      detail: "五条 B1 子条件全部满足，可关注入场机会，仍需结合大势判断。",
+      detail: "四条 B1 子条件全部满足，可关注入场机会，仍需结合大势判断。",
     };
   }
 

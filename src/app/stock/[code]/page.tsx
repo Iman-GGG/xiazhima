@@ -40,7 +40,7 @@ async function fetchAnalysis(code: string): Promise<{
     const fallback = findStock(code);
     const name =
       (snapshot?.name && snapshot.name.trim()) || fallback?.name || code.toUpperCase();
-    const marketCap = snapshot?.marketCap ?? 0;
+    const marketCap = snapshot?.marketCap ?? fallback?.marketCap ?? 0;
     const analysis = analyzeStock({ code, name }, bars, marketCap);
     if (!analysis) {
       return { ok: false, error: "战法计算失败，K 线样本可能不完整" };
