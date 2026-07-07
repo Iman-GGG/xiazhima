@@ -140,6 +140,7 @@ export function PriceChart({
 
   const [viewSize, setViewSize] = useState(DEFAULT_WINDOW);
   const [viewEnd, setViewEnd] = useState(bars.length);
+  const [hoveredDatum, setHoveredDatum] = useState<ChartDatum | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const barsRef = useRef(bars);
   barsRef.current = bars;
@@ -166,7 +167,8 @@ export function PriceChart({
 
   const handleMainMouseMove = useCallback((e: unknown) => {
     const evt = e as { activePayload?: Array<{ payload: ChartDatum }> };
-    const d = evt?.activePayload?.[0]?.payload;
+    const d = evt?.activePayload?.[0]?.payload ?? null;
+    setHoveredDatum(d);
     if (d && onHoverBar) {
       const raw = barsRef.current[d.barIndex];
       if (raw) onHoverBar(raw, d.prevClose);
@@ -174,6 +176,7 @@ export function PriceChart({
   }, [onHoverBar]);
 
   const handleMainMouseLeave = useCallback(() => {
+    setHoveredDatum(null);
     onHoverBar?.(null);
   }, [onHoverBar]);
 
@@ -253,7 +256,7 @@ export function PriceChart({
     return null;
   }
 
-  const latest = data.length > 0 ? data[data.length - 1] : null;
+  const displayDatum = hoveredDatum ?? (data.length > 0 ? data[data.length - 1] : null);
 
   return (
     <div ref={containerRef} className="w-full select-none">
@@ -358,8 +361,8 @@ export function PriceChart({
       {/* 成交量 */}
       <div className="px-5 pt-2 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>成交量（手）</span>
-        {latest && (
-          <span className="font-num">{(latest.volume / 10000).toFixed(2)} 万手</span>
+        {displayDatum && (
+          <span className="font-num">{(displayDatum.volume / 10000).toFixed(2)} 万手</span>
         )}
       </div>
       <div className="h-16 sm:h-20 px-2">
@@ -389,15 +392,15 @@ export function PriceChart({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#2563eb]" /> DIF
-            <span className="font-num">{latest?.dif != null ? latest.dif.toFixed(3) : "—"}</span>
+            <span className="font-num">{displayDatum?.dif != null ? displayDatum.dif.toFixed(3) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#eab308]" /> DEA
-            <span className="font-num">{latest?.dea != null ? latest.dea.toFixed(3) : "—"}</span>
+            <span className="font-num">{displayDatum?.dea != null ? displayDatum.dea.toFixed(3) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 bg-[var(--quote-up)]" /> MACD
-            <span className="font-num">{latest?.macd != null ? latest.macd.toFixed(3) : "—"}</span>
+            <span className="font-num">{displayDatum?.macd != null ? displayDatum.macd.toFixed(3) : "—"}</span>
           </span>
         </div>
       </div>
@@ -447,15 +450,15 @@ export function PriceChart({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#2563eb]" /> K
-            <span className="font-num">{latest?.k != null ? latest.k.toFixed(2) : "—"}</span>
+            <span className="font-num">{displayDatum?.k != null ? displayDatum.k.toFixed(2) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#eab308]" /> D
-            <span className="font-num">{latest?.d != null ? latest.d.toFixed(2) : "—"}</span>
+            <span className="font-num">{displayDatum?.d != null ? displayDatum.d.toFixed(2) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#c026d3]" /> J
-            <span className="font-num">{latest?.j != null ? latest.j.toFixed(2) : "—"}</span>
+            <span className="font-num">{displayDatum?.j != null ? displayDatum.j.toFixed(2) : "—"}</span>
           </span>
         </div>
       </div>
@@ -492,11 +495,11 @@ export function PriceChart({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-foreground" /> 短期
-            <span className="font-num">{latest?.dzShort != null ? latest.dzShort.toFixed(1) : "—"}</span>
+            <span className="font-num">{displayDatum?.dzShort != null ? displayDatum.dzShort.toFixed(1) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[var(--quote-up)]" /> 长期
-            <span className="font-num">{latest?.dzLong != null ? latest.dzLong.toFixed(1) : "—"}</span>
+            <span className="font-num">{displayDatum?.dzLong != null ? displayDatum.dzLong.toFixed(1) : "—"}</span>
           </span>
         </div>
       </div>
