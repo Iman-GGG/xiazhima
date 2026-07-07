@@ -29,6 +29,7 @@ interface ChartDatum {
   isUp: boolean;
   prevClose: number;
   changePct: number | null;
+  barIndex: number;
   volume: number;
   volumeColor: "up" | "down";
   trendShort: number | null;
@@ -127,9 +128,11 @@ function MacdShape(props: unknown) {
 export function PriceChart({
   bars,
   showDgx = false,
+  onHoverBar,
 }: {
   bars: KlineBar[];
   showDgx?: boolean;
+  onHoverBar?: (bar: KlineBar | null, prevClose?: number) => void;
 }) {
   const DEFAULT_WINDOW = 80;
   const MIN_WINDOW = 20;
@@ -137,8 +140,9 @@ export function PriceChart({
 
   const [viewSize, setViewSize] = useState(DEFAULT_WINDOW);
   const [viewEnd, setViewEnd] = useState(bars.length);
-  const [hoveredDatum, setHoveredDatum] = useState<ChartDatum | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const barsRef = useRef(bars);
+  barsRef.current = bars;
 
   // bars 数据更新时重置视图
   useEffect(() => {
@@ -162,14 +166,16 @@ export function PriceChart({
 
   const handleMainMouseMove = useCallback((e: unknown) => {
     const evt = e as { activePayload?: Array<{ payload: ChartDatum }> };
-    if (evt?.activePayload?.[0]?.payload) {
-      setHoveredDatum(evt.activePayload[0].payload);
+    const d = evt?.activePayload?.[0]?.payload;
+    if (d && onHoverBar) {
+      const raw = barsRef.current[d.barIndex];
+      if (raw) onHoverBar(raw, d.prevClose);
     }
-  }, []);
+  }, [onHoverBar]);
 
   const handleMainMouseLeave = useCallback(() => {
-    setHoveredDatum(null);
-  }, []);
+    onHoverBar?.(null);
+  }, [onHoverBar]);
 
   // 鼠标滚轮：纵向（或不带 Shift）= 缩放；横向（或 Shift+ 纵向）= 平移
   useEffect(() => {
@@ -225,6 +231,7 @@ export function PriceChart({
         changePct: idx > 0
           ? ((b.close - bars[idx - 1].close) / bars[idx - 1].close) * 100
           : null,
+        barIndex: idx,
         trendShort: pick(dgx?.trendShort),
         dgeLine: pick(dgx?.dgeLine),
         dif: pick(macd.dif),
@@ -240,22 +247,13 @@ export function PriceChart({
   }, [bars, showDgx, viewStart, safeEnd]);
 
   const subMargin = { top: 4, right: 8, bottom: 0, left: -16 } as const;
-  const tooltipBaseStyle = {
-    background: "color-mix(in srgb, var(--card) 40%, transparent)",
-    border: "1px solid color-mix(in srgb, var(--divider) 50%, transparent)",
-    borderRadius: 4,
-    fontSize: 12,
-    backdropFilter: "blur(3px)",
-    WebkitBackdropFilter: "blur(3px)",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-  } as const;
 
-  // 隐身 Tooltip：仅维持十字光标同步，不渲染浮层；数值显示在附图标题行
+  // 隐身 Tooltip：仅维持十字光标同步，不渲染浮层
   function SyncTooltip() {
     return null;
   }
 
-  const displayDatum = hoveredDatum ?? (data.length > 0 ? data[data.length - 1] : null);
+  const latest = data.length > 0 ? data[data.length - 1] : null;
 
   return (
     <div ref={containerRef} className="w-full select-none">
@@ -360,8 +358,8 @@ export function PriceChart({
       {/* 成交量 */}
       <div className="px-5 pt-2 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>成交量（手）</span>
-        {displayDatum && (
-          <span className="font-num">{(displayDatum.volume / 10000).toFixed(2)} 万手</span>
+        {latest && (
+          <span className="font-num">{(latest.volume / 10000).toFixed(2)} 万手</span>
         )}
       </div>
       <div className="h-16 sm:h-20 px-2">
@@ -380,15 +378,6 @@ export function PriceChart({
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
             />
-            <Tooltip
-              contentStyle={tooltipBaseStyle}
-              labelStyle={{ color: "var(--muted-foreground)" }}
-              formatter={(value: number | string) =>
-                typeof value === "number"
-                  ? [`${(value / 10000).toFixed(2)} 万手`, "成交量"]
-                  : ["—", "成交量"]
-              }
-            />
             <Bar dataKey="volume" isAnimationActive={false} shape={VolumeShape as never} />
           </ComposedChart>
         </ResponsiveContainer>
@@ -400,15 +389,15 @@ export function PriceChart({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#2563eb]" /> DIF
-            <span className="font-num">{displayDatum?.dif != null ? displayDatum.dif.toFixed(3) : "—"}</span>
+            <span className="font-num">{latest?.dif != null ? latest.dif.toFixed(3) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#eab308]" /> DEA
-            <span className="font-num">{displayDatum?.dea != null ? displayDatum.dea.toFixed(3) : "—"}</span>
+            <span className="font-num">{latest?.dea != null ? latest.dea.toFixed(3) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 bg-[var(--quote-up)]" /> MACD
-            <span className="font-num">{displayDatum?.macd != null ? displayDatum.macd.toFixed(3) : "—"}</span>
+            <span className="font-num">{latest?.macd != null ? latest.macd.toFixed(3) : "—"}</span>
           </span>
         </div>
       </div>
@@ -427,15 +416,6 @@ export function PriceChart({
               tickLine={false}
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
-            />
-            <Tooltip
-              contentStyle={tooltipBaseStyle}
-              labelStyle={{ color: "var(--muted-foreground)" }}
-              formatter={(value: number | string, name: string) => {
-                if (typeof value !== "number") return ["—", name];
-                const labels: Record<string, string> = { dif: "DIF", dea: "DEA", macd: "MACD" };
-                return [value.toFixed(3), labels[name] ?? name];
-              }}
             />
             <ReferenceLine y={0} stroke="var(--divider)" strokeWidth={1} />
             <Bar dataKey="macd" isAnimationActive={false} shape={MacdShape as never} />
@@ -467,15 +447,15 @@ export function PriceChart({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#2563eb]" /> K
-            <span className="font-num">{displayDatum?.k != null ? displayDatum.k.toFixed(2) : "—"}</span>
+            <span className="font-num">{latest?.k != null ? latest.k.toFixed(2) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#eab308]" /> D
-            <span className="font-num">{displayDatum?.d != null ? displayDatum.d.toFixed(2) : "—"}</span>
+            <span className="font-num">{latest?.d != null ? latest.d.toFixed(2) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[#c026d3]" /> J
-            <span className="font-num">{displayDatum?.j != null ? displayDatum.j.toFixed(2) : "—"}</span>
+            <span className="font-num">{latest?.j != null ? latest.j.toFixed(2) : "—"}</span>
           </span>
         </div>
       </div>
@@ -497,15 +477,6 @@ export function PriceChart({
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
             />
-            <Tooltip
-              contentStyle={tooltipBaseStyle}
-              labelStyle={{ color: "var(--muted-foreground)" }}
-              formatter={(value: number | string, name: string) => {
-                if (typeof value !== "number") return ["—", name];
-                const labels: Record<string, string> = { k: "K", d: "D", j: "J" };
-                return [value.toFixed(2), labels[name] ?? name];
-              }}
-            />
             <ReferenceLine y={20} stroke="var(--divider)" strokeDasharray="2 4" />
             <ReferenceLine y={80} stroke="var(--divider)" strokeDasharray="2 4" />
             <Line type="monotone" dataKey="k" stroke="#2563eb" strokeWidth={1.4} dot={false} isAnimationActive={false} connectNulls />
@@ -521,11 +492,11 @@ export function PriceChart({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-foreground" /> 短期
-            <span className="font-num">{displayDatum?.dzShort != null ? displayDatum.dzShort.toFixed(1) : "—"}</span>
+            <span className="font-num">{latest?.dzShort != null ? latest.dzShort.toFixed(1) : "—"}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-[2px] bg-[var(--quote-up)]" /> 长期
-            <span className="font-num">{displayDatum?.dzLong != null ? displayDatum.dzLong.toFixed(1) : "—"}</span>
+            <span className="font-num">{latest?.dzLong != null ? latest.dzLong.toFixed(1) : "—"}</span>
           </span>
         </div>
       </div>
@@ -546,18 +517,6 @@ export function PriceChart({
               tickLine={false}
               axisLine={{ stroke: "var(--divider)" }}
               width={50}
-            />
-            <Tooltip
-              contentStyle={tooltipBaseStyle}
-              labelStyle={{ color: "var(--muted-foreground)" }}
-              formatter={(value: number | string, name: string) => {
-                if (typeof value !== "number") return ["—", name];
-                const labels: Record<string, string> = {
-                  dzShort: "短期",
-                  dzLong: "长期",
-                };
-                return [value.toFixed(1), labels[name] ?? name];
-              }}
             />
             {/* 85 / 30 黄色实线水平参考 */}
             <ReferenceLine y={85} stroke="#eab308" strokeWidth={1.2} />

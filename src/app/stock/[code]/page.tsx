@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { StockSearch } from "@/components/feature/stock-search";
 import { SectionHeader } from "@/components/feature/section-header";
-import { PriceChart } from "@/components/feature/price-chart";
 import { RememberStock } from "@/components/feature/last-stock-bridge";
+import { ChartIndicatorsGroup } from "./chart-indicators-group";
 import { StockPoolNav } from "./stock-pool-nav";
 import type { KlineBar, StockAnalysis } from "@/lib/stock/types";
 import { analyzeStock } from "@/lib/stock/b1";
@@ -85,19 +85,11 @@ export default async function StockDetailPage({ params }: PageProps) {
       ) : (
         <>
           <VerdictHeader a={analysis} />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <div className="lg:col-span-2 border border-divider bg-card">
-              <SectionHeader
-                title="价格走势 / 大哥线"
-                subtitle="收盘价叠加大哥线：知行短期趋势线（蓝） + 知行多空线（黄）。"
-              />
-              <PriceChart bars={allBars ?? analysis.recentBars} showDgx />
-            </div>
-            <div className="border border-divider bg-card">
-              <SectionHeader title="核心指标" subtitle="数值即结论的依据，禁止主观偏移。" />
-              <Indicators a={analysis} />
-            </div>
-          </div>
+          <ChartIndicatorsGroup
+            analysis={analysis}
+            allBars={allBars ?? analysis.recentBars}
+            showDgx
+          />
 
           <section className="border border-divider bg-card">
             <SectionHeader
@@ -338,81 +330,6 @@ function Stat({
       <div className="font-num text-2xl mt-1">{value}</div>
       {sub && <div className={cn("text-xs mt-0.5", subTone ?? "text-muted-foreground")}>{sub}</div>}
     </div>
-  );
-}
-
-function Indicators({ a }: { a: StockAnalysis }) {
-  const bars = a.recentBars;
-  const last = bars[bars.length - 1];
-  const last5 = bars.slice(-5);
-  const avg5Vol = last5.reduce((s, b) => s + b.volume, 0) / Math.max(1, last5.length);
-  const todayVol = last?.volume ?? 0;
-  const ratio = avg5Vol === 0 ? 0 : (todayVol / avg5Vol) * 100;
-  const open = last?.open ?? 0;
-  const high = last?.high ?? 0;
-  const low = last?.low ?? 0;
-  const amplitude = a.prevClose > 0 ? ((high - low) / a.prevClose) * 100 : 0;
-  const items: { label: string; value: string; tone?: "pass" | "risk" | "neutral"; quoteColor?: boolean }[] = [
-    { label: "振幅", value: `${amplitude.toFixed(2)}%` },
-    { label: "开盘价", value: open.toFixed(2) },
-    { label: "收盘价", value: a.price.toFixed(2) },
-    { label: "最高价", value: high.toFixed(2) },
-    { label: "最低价", value: low.toFixed(2) },
-    {
-      label: "涨跌幅",
-      value: `${a.change >= 0 ? "+" : ""}${a.change.toFixed(2)}%`,
-      quoteColor: true,
-    },
-    { label: "今日成交量", value: `${(todayVol / 10000).toFixed(2)} 万手` },
-    { label: "5 日均量", value: `${(avg5Vol / 10000).toFixed(2)} 万手` },
-    {
-      label: "量比 (今日/5日均)",
-      value: `${ratio.toFixed(1)}%`,
-      tone: ratio < 100 ? "pass" : "neutral",
-    },
-    {
-      label: "KDJ-J",
-      value: a.kdjJ.toFixed(2),
-      tone: a.kdjJ < 0 ? "pass" : "neutral",
-    },
-    {
-      label: "总市值",
-      value: a.totalCap > 0 ? `${a.totalCap.toFixed(0)} 亿元` : "—",
-    },
-    { label: "所属行业", value: "—", tone: "neutral" },
-    { label: "所属概念", value: "—", tone: "neutral" },
-    { label: "所属指数", value: "—", tone: "neutral" },
-  ];
-  return (
-    <ul className="divide-y divide-divider">
-      {items.map((it) => {
-        const quoteStyle: { color?: string } | undefined = it.quoteColor
-          ? {
-              color:
-                a.change > 0
-                  ? "var(--quote-up)"
-                  : a.change < 0
-                    ? "var(--quote-down)"
-                    : undefined,
-            }
-          : undefined;
-        return (
-          <li key={it.label} className="px-5 py-2.5 flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{it.label}</span>
-            <span
-              style={quoteStyle}
-              className={cn(
-                "font-num font-medium",
-                it.tone === "pass" && "text-[color:var(--signal-pass)]",
-                it.tone === "risk" && "text-[color:var(--signal-risk)]",
-              )}
-            >
-              {it.value}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
   );
 }
 
