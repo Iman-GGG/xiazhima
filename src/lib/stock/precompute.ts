@@ -305,16 +305,17 @@ export async function runPrecompute(reason = "manual"): Promise<PrecomputeData |
     console.log(`[Precompute] start host=${hostTag()} reason=${reason} at ${new Date().toISOString()}`);
     const market = await computeMarket();
     const entries = await computeAllStocks();
+    const tradingDate = cstDateStr();
     const data: PrecomputeData = {
       version: SCHEMA_VERSION,
-      date: cstDateStr(),
+      date: tradingDate,
       computedAt: new Date().toISOString(),
       durationMs: Date.now() - startAt,
       market,
       screen: {
-        major: buildScreenPayload("major", entries, data.date),
-        full: buildScreenPayload("full", entries, data.date),
-        all: buildScreenPayload("all", entries, data.date),
+        major: buildScreenPayload("major", entries, tradingDate),
+        full: buildScreenPayload("full", entries, tradingDate),
+        all: buildScreenPayload("all", entries, tradingDate),
       },
     };
     // 若全 A 扫描无结果（API 故障等），不落盘，避免覆盖上一次成功缓存
