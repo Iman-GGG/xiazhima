@@ -31,7 +31,6 @@ export function ScreenTable({
             <th className="px-5 py-2.5 text-right hidden sm:table-cell">KDJ-J</th>
             <th className="px-5 py-2.5 text-right hidden sm:table-cell">BBI</th>
             <th className="px-5 py-2.5 hidden sm:table-cell">趋势</th>
-            <th className="px-5 py-2.5 w-[80px]" />
           </tr>
         </thead>
         <tbody>
@@ -96,10 +95,15 @@ export function ScreenTable({
                   </span>
                 </td>
                 <td className="px-5 py-3">
-                  <div className="font-medium">{r.name}</div>
-                  <div className="font-num text-[11px] text-muted-foreground tracking-wider">
-                    {r.code.toUpperCase()}
-                  </div>
+                  <Link
+                    href={`/stock/${r.code}`}
+                    className="block hover:opacity-70 transition-opacity"
+                  >
+                    <div className="font-medium">{r.name}</div>
+                    <div className="font-num text-[11px] text-muted-foreground tracking-wider">
+                      {r.code.toUpperCase()}
+                    </div>
+                  </Link>
                 </td>
                 <td className="px-5 py-3 text-right font-num">{r.price.toFixed(2)}</td>
                 <td
@@ -135,14 +139,6 @@ export function ScreenTable({
                   >
                     {r.trend === "long" ? "BBI 多头" : "BBI 空头"}
                   </span>
-                </td>
-                <td className="px-5 py-3">
-                  <Link
-                    href={`/stock/${r.code}`}
-                    className="text-xs px-2 py-1 border border-divider hover:bg-foreground hover:text-background transition-colors inline-block"
-                  >
-                    解析 →
-                  </Link>
                 </td>
               </tr>
             );
