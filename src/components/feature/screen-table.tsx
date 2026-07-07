@@ -22,16 +22,16 @@ export function ScreenTable({
   }
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] text-sm">
+      <table className="w-full table-fixed text-sm">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-divider">
-            <th className="px-1.5 py-2.5 w-[50px]">裁定</th>
+            <th className="pl-4 pr-2 py-2.5 w-[60px]">裁定</th>
             <th className="px-2 py-2.5">标的</th>
-            <th className="px-1 py-2.5 w-[54px]">分时</th>
-            <th className="px-2 py-2.5 w-[60px] text-right">最新价</th>
-            <th className="px-2 py-2.5 w-[60px] text-right">涨跌幅</th>
-            <th className="px-2 py-2.5 w-[54px] text-right hidden sm:table-cell">KDJ-J</th>
-            <th className="px-2 py-2.5 w-[54px] text-right hidden sm:table-cell">BBI</th>
+            <th className="px-2 py-2.5 w-[80px]">分时</th>
+            <th className="px-2 py-2.5 w-[64px] text-right">最新价</th>
+            <th className="px-2 py-2.5 w-[68px] text-right">涨跌幅</th>
+            <th className="px-2 py-2.5 w-[48px] text-right hidden sm:table-cell">KDJ-J</th>
+            <th className="px-2 py-2.5 w-[56px] text-right hidden sm:table-cell">BBI</th>
             <th className="px-2 py-2.5 w-[72px] hidden sm:table-cell">趋势</th>
           </tr>
         </thead>
@@ -80,7 +80,7 @@ export function ScreenTable({
                 key={r.code}
                 className="border-b border-divider hover:bg-muted/60 transition-colors"
               >
-                <td className="px-1.5 py-2.5">
+                <td className="pl-4 pr-2 py-2.5">
                   <span className="inline-flex items-center gap-1 text-[12px]">
                     <span className={cn("dot", dotClass)} />
                     <span
@@ -96,7 +96,7 @@ export function ScreenTable({
                     </span>
                   </span>
                 </td>
-                <td className="px-2 py-2.5 max-w-[130px]">
+                <td className="px-2 py-2.5">
                   <Link
                     href={`/stock/${r.code}`}
                     className="block hover:opacity-70 transition-opacity"
@@ -107,7 +107,7 @@ export function ScreenTable({
                     </div>
                   </Link>
                 </td>
-                <td className="px-1 py-2.5">
+                <td className="px-2 py-2.5">
                   {(() => {
                     const last = r.recentBars?.[r.recentBars.length - 1];
                     if (!last) return <span className="text-muted-foreground text-[11px]">—</span>;
