@@ -4,6 +4,19 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  shell-quote@<1.8.4: 1.8.4
+  flatted@<3.4.2: 3.4.2
+  minimatch@<3.1.4: 3.1.4
+  minimatch@>=9.0.0 <9.0.7: 9.0.7
+  minimatch@>=10.0.0 <10.2.3: 10.2.3
+  hono@<4.12.25: 4.12.25
+  '@hono/node-server@<1.19.13': 1.19.13
+  picomatch@<2.3.2: 2.3.2
+  picomatch@>=4.0.0 <4.0.4: 4.0.4
+  '@isaacs/brace-expansion@<5.0.1': 5.0.1
+  path-to-regexp@>=8.0.0 <8.4.0: 8.4.0
+
 importers:
 
   .:
@@ -206,7 +219,7 @@ importers:
         version: 4.1.18
       tsup:
         specifier: ^8.3.5
-        version: 8.5.1(jiti@2.6.1)(postcss@8.5.15)(tsx@4.23.1)(typescript@5.9.3)
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.15)(tsx@4.23.1)(typescript@5.9.3)(yaml@1.10.2)
       tsx:
         specifier: ^4.19.2
         version: 4.23.1
@@ -215,7 +228,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.9
-        version: 4.1.9(@types/node@20.19.30)(msw@2.12.7(@types/node@20.19.30)(typescript@5.9.3))(vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1))
+        version: 4.1.9(@types/node@20.19.30)(msw@2.12.7(@types/node@20.19.30)(typescript@5.9.3))(vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)(yaml@1.10.2))
 
 packages:
 
@@ -766,7 +779,7 @@ packages:
     resolution: {integrity: sha512-TsQLe4i2gvoTtrHje625ngThGBySOgSK3Xo2XRYOdqGN1teR8+I7vchQC46uLJi8OF62YTYA3AhSpumtkhsaKQ==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
-      hono: ^4
+      hono: 4.12.25
 
   '@hookform/resolvers@5.4.0':
     resolution: {integrity: sha512-EIsqr/t/qbinPIhGjMdtvutIN1Kk4uwbROE9/UQ93CAVGR7GkA7Y92+fX80OzXi/OB67jVFYwKGO1WzkxmkFZw==}
@@ -3387,7 +3400,7 @@ packages:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
-      picomatch: ^3 || ^4
+      picomatch: 4.0.4
     peerDependenciesMeta:
       picomatch:
         optional: true
@@ -7529,14 +7542,14 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.9(msw@2.12.7(@types/node@20.19.30)(typescript@5.9.3))(vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1))':
+  '@vitest/mocker@4.1.9(msw@2.12.7(@types/node@20.19.30)(typescript@5.9.3))(vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)(yaml@1.10.2))':
     dependencies:
       '@vitest/spy': 4.1.9
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
       msw: 2.12.7(@types/node@20.19.30)(typescript@5.9.3)
-      vite: 8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)
+      vite: 8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)(yaml@1.10.2)
 
   '@vitest/pretty-format@4.1.9':
     dependencies:
@@ -8430,7 +8443,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.2(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -8452,7 +8465,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.2(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.2(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1))
       hasown: 2.0.4
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -9767,13 +9780,14 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.15)(tsx@4.23.1):
+  postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.15)(tsx@4.23.1)(yaml@1.10.2):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
       jiti: 2.6.1
       postcss: 8.5.15
       tsx: 4.23.1
+      yaml: 1.10.2
 
   postcss-selector-parser@7.1.1:
     dependencies:
@@ -10587,7 +10601,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.1(jiti@2.6.1)(postcss@8.5.15)(tsx@4.23.1)(typescript@5.9.3):
+  tsup@8.5.1(jiti@2.6.1)(postcss@8.5.15)(tsx@4.23.1)(typescript@5.9.3)(yaml@1.10.2):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.27.3)
       cac: 6.7.14
@@ -10598,7 +10612,7 @@ snapshots:
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(jiti@2.6.1)(postcss@8.5.15)(tsx@4.23.1)
+      postcss-load-config: 6.0.1(jiti@2.6.1)(postcss@8.5.15)(tsx@4.23.1)(yaml@1.10.2)
       resolve-from: 5.0.0
       rollup: 4.59.0
       source-map: 0.7.6
@@ -10795,7 +10809,7 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1):
+  vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)(yaml@1.10.2):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
@@ -10809,11 +10823,12 @@ snapshots:
       jiti: 2.6.1
       terser: 5.48.0
       tsx: 4.23.1
+      yaml: 1.10.2
 
-  vitest@4.1.9(@types/node@20.19.30)(msw@2.12.7(@types/node@20.19.30)(typescript@5.9.3))(vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)):
+  vitest@4.1.9(@types/node@20.19.30)(msw@2.12.7(@types/node@20.19.30)(typescript@5.9.3))(vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)(yaml@1.10.2)):
     dependencies:
       '@vitest/expect': 4.1.9
-      '@vitest/mocker': 4.1.9(msw@2.12.7(@types/node@20.19.30)(typescript@5.9.3))(vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1))
+      '@vitest/mocker': 4.1.9(msw@2.12.7(@types/node@20.19.30)(typescript@5.9.3))(vite@8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)(yaml@1.10.2))
       '@vitest/pretty-format': 4.1.9
       '@vitest/runner': 4.1.9
       '@vitest/snapshot': 4.1.9
@@ -10830,7 +10845,7 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.1.0
-      vite: 8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)
+      vite: 8.1.0(@types/node@20.19.30)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.48.0)(tsx@4.23.1)(yaml@1.10.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 20.19.30
