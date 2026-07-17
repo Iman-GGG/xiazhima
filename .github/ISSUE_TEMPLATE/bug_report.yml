@@ -1,0 +1,94 @@
+name: Bug 报告
+description: 报告可复现的程序、数据处理或界面问题
+title: "[Bug]: "
+labels:
+  - bug
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。安全漏洞请通过仓库 Security 页面私密报告，不要在此公开凭据、Cookie、环境变量值、利用代码或个人数据。
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索现有 Issue，确认没有重复报告。
+          required: true
+        - label: 这不是投资咨询、个股推荐请求或单纯的信号观点分歧。
+          required: true
+        - label: 报告中不含密码、令牌、Cookie、个人信息或真实交易数据。
+          required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 影响范围
+      options:
+        - 裁断台与筛选结果
+        - 个股解析与搜索
+        - B1 / B2 / 单针下三十 / S1 规则
+        - 行情获取、缓存或预计算
+        - 管理员后台
+        - 构建、部署或开发工具
+        - 文档或界面
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 说明发生了什么，以及为什么你认为这是程序问题。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开……
+        2. 选择……
+        3. 输入……
+        4. 看到……
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+    validations:
+      required: true
+
+  - type: input
+    id: data-date
+    attributes:
+      label: 数据日期与股票代码（如适用）
+      description: 只提供公开行情的日期和代码，不要提供持仓或交易信息。
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境
+      placeholder: 线上演示或本地；操作系统；浏览器；Node.js 与 pnpm 版本
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 补充材料
+      description: 可提供已脱敏日志、截图或最小复现仓库。
+
