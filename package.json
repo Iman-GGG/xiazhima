@@ -87,6 +87,21 @@
     "typescript": "^5",
     "vitest": "^4.1.9"
   },
+  "pnpm": {
+    "overrides": {
+      "shell-quote@<1.8.4": "1.8.4",
+      "flatted@<3.4.2": "3.4.2",
+      "minimatch@<3.1.4": "3.1.4",
+      "minimatch@>=9.0.0 <9.0.7": "9.0.7",
+      "minimatch@>=10.0.0 <10.2.3": "10.2.3",
+      "hono@<4.12.25": "4.12.25",
+      "@hono/node-server@<1.19.13": "1.19.13",
+      "picomatch@<2.3.2": "2.3.2",
+      "picomatch@>=4.0.0 <4.0.4": "4.0.4",
+      "@isaacs/brace-expansion@<5.0.1": "5.0.1",
+      "path-to-regexp@>=8.0.0 <8.4.0": "8.4.0"
+    }
+  },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "pnpm": ">=9.0.0"
