@@ -143,10 +143,10 @@ export function PriceChart({
   const [hoveredDatum, setHoveredDatum] = useState<ChartDatum | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const barsRef = useRef(bars);
-  barsRef.current = bars;
 
   // bars 数据更新时重置视图
   useEffect(() => {
+    barsRef.current = bars;
     setViewSize(DEFAULT_WINDOW);
     setViewEnd(bars.length);
   }, [bars]);
