@@ -12,6 +12,8 @@ __pycache__/
 *.egg-info/
 /.env
 .env
+.env*
+!.env.example
 .cozeproj/reduction
 
 # JS/TS bundlers & build outputs
@@ -166,4 +168,3 @@ Desktop.ini
 .claude/
 
 .vercel
-.env*
