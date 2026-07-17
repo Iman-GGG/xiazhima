@@ -29,7 +29,6 @@ body:
       description: 请先描述使用场景和现有困难，而不是只描述实现方式。
     validations:
       required: true
-
   - type: textarea
     id: proposal
     attributes:
@@ -67,4 +66,3 @@ body:
         - 暂时只能提出建议
     validations:
       required: true
-

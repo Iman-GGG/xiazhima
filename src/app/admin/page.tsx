@@ -237,8 +237,7 @@ export default function AdminPage() {
               <div className="px-5 py-4 border-b border-divider">
                 <div className="font-serif-display text-lg">登录</div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  默认密码 <code className="font-mono">xiazhima-admin</code>（可通过环境变量
-                  <code className="font-mono"> ADMIN_PASSWORD</code> 修改）
+                  管理员凭据由部署环境配置；未配置时登录功能保持关闭。
                 </div>
               </div>
               <form onSubmit={handleLogin} className="px-5 py-5 space-y-4">
