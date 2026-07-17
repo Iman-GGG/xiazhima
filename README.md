@@ -4,7 +4,7 @@
 
 > 不预测，只裁断。瞎芝麻仅提供基于公开行情数据的规则计算与信息展示，不构成投资建议，不承诺收益，也不对任何交易损失负责。
 
-[在线演示](https://xiazhima.vercel.app) · [问题反馈](https://github.com/Iman-GGG/xiazhima/issues) · [Apache-2.0 License](./LICENSE)
+[在线演示](https://xiazhima.vercel.app) · [问题反馈](https://github.com/Iman-GGG/xiazhima/issues) · [贡献指南](./CONTRIBUTING.md) · [安全政策](./SECURITY.md) · [路线图](./ROADMAP.md) · [Apache-2.0 License](./LICENSE)
 
 ![瞎芝麻裁断台首页](./docs/images/home.jpg)
 
@@ -118,7 +118,7 @@ docs/                       # 公开项目文档
 3. 对应的测试用例；
 4. 对现有行为和风险提示的影响说明。
 
-更完整的贡献、安全报告和路线图文档将在后续开源维护提交中补充。
+提交代码前请阅读 [贡献指南](./CONTRIBUTING.md)。安全漏洞请按照 [安全政策](./SECURITY.md) 私下报告；计划中的工作与明确边界见 [项目路线图](./ROADMAP.md)。
 
 ## 维护者
 
