@@ -35,6 +35,7 @@
 - overrides 按受影响版本范围限定，尽量保持现有主版本；不使用 `audit --fix` 做无差别跨主版本替换。
 - 保持 packageManager、CI、Docker 使用 pnpm 9.0.0。安装检查脚本拒绝其他 pnpm 主版本，避免 pnpm 11 忽略 `package.json` 中的 overrides。Docker 在依赖安装前复制该脚本。
 - CI 从“只审计生产 high/critical”改为审计完整依赖树，不屏蔽公告、不手动关闭告警。
+- 默认 registry 改为 npm 官方源：GitHub 干净安装发现 npmmirror 缺少 electron-to-chromium 1.5.444 的 tarball（404），本地已有缓存会掩盖这一问题。
 
 ## 本地验证
 
