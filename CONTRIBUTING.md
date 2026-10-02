@@ -21,7 +21,7 @@
 
 ## 本地开发
 
-环境要求：Node.js 20+、pnpm 9+。本项目只使用 pnpm。
+环境要求：Node.js 20+、pnpm 9（项目固定为 9.0.0）。本项目只使用 pnpm；请勿用 pnpm 10/11 改写锁文件，避免安全 overrides 和 CI 安装结果不一致。
 
 ```bash
 git clone https://github.com/Iman-GGG/xiazhima.git

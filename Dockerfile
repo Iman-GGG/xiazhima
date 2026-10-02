@@ -7,6 +7,7 @@ WORKDIR /app
 
 # Layer 1: dependencies (cache-friendly)
 COPY package.json pnpm-lock.yaml .npmrc ./
+COPY scripts/check-package-manager.mjs ./scripts/check-package-manager.mjs
 RUN pnpm install --frozen-lockfile --prefer-offline
 
 # Layer 2: source + build
